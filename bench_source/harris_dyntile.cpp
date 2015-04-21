@@ -112,7 +112,7 @@ extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * har
     static int TSIZEX = 32;
     static int TSIZEY = 256;
 
-    #pragma omp parallel for schedule(static) shared(img)
+    //#pragma omp parallel for schedule(static) shared(img)
     for (int  Ti = 0; (Ti <= (R / TSIZEX)); Ti ++)
     {
 
@@ -128,58 +128,61 @@ extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * har
             int bot0, top0, right0, left0;
             int height,width;
             // Tile bounds
-            bot0 = isl_max(Ti * TSIZEX, 0);
-            top0 = isl_min( (Ti + 1) * TSIZEX , R);
-            left0 = isl_max(Tj * TSIZEY, 0);
-            right0 = isl_min( (Tj + 1) * TSIZEY, C);
+            bot0 = isl_min(isl_max(Ti * TSIZEX, 1), R-1);
+            top0 = isl_min( (Ti + 1) * TSIZEX , R-1);
+            left0 = isl_min(isl_max(Tj * TSIZEY, 1), C-1);
+            right0 = isl_min( (Tj + 1) * TSIZEY, C-1);
+
+            width = right0 - left0;
+            height = top0 - bot0;
 
             #ifndef tile_cell
-            #define tile_cell(A,i,j) mat_cell(A,i-Ti*TSIZEX,j-Tj*TSIZEY)
+            #define tile_cell(A,i,j) mat_cell(A,i-bot0,j-left0)
             #endif
 
-            #pragma omp task depend(out : Iy[:][:],  Ix[:][:])
-            for (int  i = bot0; i < top0 ; i++)
+            //#pragma omp task depend(out : Iy[:][:],  Ix[:][:])
+            for (int  i = bot0; i <= top0 ; i++)
             {
 
                 #pragma ivdep
-                for (int  j = left0 ; j < right0 ; j ++)
+                for (int  j = left0 ; j <= right0 ; j ++)
                 {
                     tile_cell(Iy,i,j) = sobelY(img,i,j);
                     tile_cell(Ix,i,j) = sobelX(img, i, j);
                 }
             }
 
-            #pragma omp task depend(out : Syy[:][:]) depend(in : Iy[:][:])
+            //#pragma omp task depend(out : Syy[:][:]) depend(in : Iy[:][:])
             {
-                for (int  i = 1; i < R+1 ; i++)
+                for (int  i = 1; i < height+1 ; i++)
                 {
                     #pragma ivdep
-                    for(int j= 1 ; j < C+1 ; j ++)
+                    for(int j= 1 ; j < width+1 ; j ++)
                     {
                         mat_cell(Syy,i,j) = filter2sq( Iy, Iy, i,j) ;
                     }
                 }
             }
 
-            #pragma omp task depend(in : Ix[:][:], Iy[:][:]) \
+            //#pragma omp task depend(in : Ix[:][:], Iy[:][:]) \
             depend(out : Sxy[:][:])
             {
-                for (int  i = 1; i < R+1 ; i++)
+                for (int  i = 1; i < height+1 ; i++)
                 {
                     #pragma ivdep
-                    for(int j= 1 ; j < C+1 ; j ++)
+                    for(int j= 1 ; j < width+1 ; j ++)
                     {
                         mat_cell(Sxy, i, j) = filter2sq( Ix, Iy, i,j) ;
                     }
                 }
             }
 
-            #pragma omp task depend(in : Ix[:][:]) depend( out : Sxx[:][:])
+            //#pragma omp task depend(in : Ix[:][:]) depend( out : Sxx[:][:])
             {
-                for (int  i = 1; i < R+1 ; i++)
+                for (int  i = 1; i < height+1 ; i++)
                 {
                     #pragma ivdep
-                    for(int j= 1 ; j < C+1 ; j ++)
+                    for(int j= 1 ; j < width+1 ; j ++)
                     {
                         mat_cell(Sxx, i, j) = filter2sq( Ix,Ix, i,j) ;
                     }
@@ -187,18 +190,18 @@ extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * har
 
             }
 
-            #pragma omp task depend( in : Sxx[:][:], Sxy[:][:], Syy[:][:])
+            //#pragma omp task depend( in : Sxx[:][:], Sxy[:][:], Syy[:][:])
             {
-                for (int  i = 1; i < R+1 ; i++)
+                for (int  i = bot0+1; i < top0-1 ; i++)
                 {
                     #pragma ivdep
-                    for(int j= 1 ; j < C+1 ; j ++)
+                    for (int  j = left0+1 ; j < right0-1 ; j ++)
                     {
                         tab_cell(harris,i,j) =
                             det(i, j) -
                             (0.04f * (
-                                (mat_cell(Sxx, i, j) + mat_cell(Syy, i, j)) *
-                                (mat_cell(Sxx, i, j) + mat_cell(Syy, i, j))
+                                (tile_cell(Sxx, i, j) + tile_cell(Syy, i, j)) *
+                                (tile_cell(Sxx, i, j) + tile_cell(Syy, i, j))
                                 )
                             );
                     }

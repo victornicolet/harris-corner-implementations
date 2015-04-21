@@ -1,8 +1,8 @@
-#CXX=icpc
-#CXX_FLAGS=-openmp -ipo -O3 -xhost -fPIC -shared
+CXX=icpc
+CXX_FLAGS=-openmp -ipo -O3 -xhost -fPIC -shared
 
-CXX=g++
-CXX_FLAGS=-fopenmp -g -O3 -fPIC -shared
+#CXX=g++
+#CXX_FLAGS=-fopenmp -g -O3 -fPIC -shared
 
 all: polymage naive dyntile nopar larger
 
