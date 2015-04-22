@@ -20,6 +20,8 @@
                       (tab_cell(A, i+1, j) * 0.166666666667f) + (tab_cell(A, i-1, j) * (-0.166666666667f)) + \
                        (tab_cell(A, i-1, j+1) * (-0.0833333333333f)) + (tab_cell(A, i+1, j+1) * 0.0833333333333f))
 
+// Macros implementing various smoothing filters. Use regexes to edit !
+
 #define filter3(A,i,j) mat_cell(A, i-2, j-2) + mat_cell(A, i-2, j-1) + mat_cell(A, i-2, j) + \
                         mat_cell(A, i-2, j+1) + mat_cell(A, i-2, j+2) + mat_cell(A, i-1, j-2) + \
                         mat_cell(A, i-1, j-1) + mat_cell(A, i-1, j) + mat_cell(A, i-1, j+1) + \
@@ -75,6 +77,7 @@
                         mat_cell(Sxy, i, j) * mat_cell(Sxy, i, j)
 
 
+
 float ** allocmatrix(int rows, int cols){
   float ** Res = (float **) malloc(sizeof(float *) * rows);
   for(int i = 0; i < rows ; i++){
@@ -119,6 +122,9 @@ extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * har
   // Tile size
   static int TSIZEX = 32;
   static int TSIZEY = 256;
+  // Filter size
+  // filter2 -> ft_size =1 or filter3 -> ft_size = 2
+  static int ft_size = 1;
 
   #pragma omp parallel
   {
@@ -133,16 +139,20 @@ extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * har
           int bot, top, right, left;
           int bot0, top0, right0, left0;
           int height,width;
-          // Tile bounds
+
+          // Tile bounds :
+          // Level 0 : margins before smoothing filter
           bot0 = isl_max(Ti * TSIZEX, 1);
           top0 = isl_min( (Ti + 1) * TSIZEX , R-1);
           left0 = isl_max(Tj * TSIZEY, 1);
           right0 = isl_min( (Tj + 1) * TSIZEY, C-1);
-          bot = isl_max(Ti * TSIZEX, 3);
-          top = isl_min( (Ti + 1) * TSIZEX , R-2);
-          left = isl_max(Tj * TSIZEY, 2);
-          right = isl_min( (Tj + 1) * TSIZEY, C-2);
+          // Margins after smoothing filter
+          bot = isl_max(Ti * TSIZEX, ft_size);
+          top = isl_min( (Ti + 1) * TSIZEX+1 , R-ft_size-1);
+          left = isl_max(Tj * TSIZEY, ft_size+1);
+          right = isl_min( (Tj + 1) * TSIZEY, C-ft_size-1);
 
+          // Tile size after smoothing filter
           width = right - left;
           height = top - bot;
 
@@ -162,10 +172,10 @@ extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * har
             }
           }
 
-          // Computational tasks : Ixx & Sxx
+          // Computational tasks : Ixx & Sxx fused
 
           #pragma omp task depend(out : Syy[bot:height][left:width]) \
-              depend(in : Iy[bot0:height][left0:width])
+              depend(in : Iy[bot-ft_size:height+ft_size][left-ft_size:width+ft_size])
           {
             for (int  i = bot; i < top ; i++)
             {
@@ -177,7 +187,8 @@ extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * har
             }
           }
 
-          #pragma omp task depend(in : Ix[bot0:height+2][left0:width+2], Iy[bot0:height+2][left0:width+2]) \
+          #pragma omp task depend(in : Ix[bot-ft_size:height+ft_size][left-ft_size:width+ft_size],\
+               Iy[bot-ft_size:height+ft_size][left-ft_size:width+ft_size]) \
             depend(out : Sxy[bot:height][left:width])
           {
             for (int  i = bot; i < top ; i++)
@@ -190,7 +201,7 @@ extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * har
             }
           }
 
-          #pragma omp task depend(in : Ix[bot0:height+2][left0:width+2]) \
+          #pragma omp task depend(in : Ix[bot-ft_size:height+ft_size][left-ft_size:width+ft_size]) \
             depend( out : Sxx[bot:height][left:width])
           {
             for (int  i = bot; i < top ; i++)
@@ -214,7 +225,6 @@ extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * har
             for (int  j = left ; j < right ; j ++)
             {
               tab_cell(harris,i,j) =  det(i, j) - (0.04f * ((mat_cell(Sxx, i, j) + mat_cell(Syy, i, j)) * (mat_cell(Sxx, i, j) + mat_cell(Syy, i, j))));
-              //tab_cell(harris, i, j) = tab_cell(img, i, j);
             }
           }
 
