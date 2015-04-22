@@ -86,10 +86,9 @@ extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * har
     // Filter size
     static int ft_size = 1;
 
-    //#pragma omp parallel for schedule(static) shared(img)
+    #pragma omp parallel for schedule(static) shared(img)
     for (int  Ti = 0; (Ti <= (R / TSIZEX)); Ti ++)
     {
-
         float Ix[TSIZEX+2*ft_size][TSIZEY+2*ft_size];
         float Iy[TSIZEX+2*ft_size][TSIZEY+2*ft_size];
         float Sxx[TSIZEX+2*ft_size][TSIZEY+2*ft_size];
@@ -98,14 +97,15 @@ extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * har
 
         for (int  Tj = 0; (Tj <= (C / TSIZEY)); Tj ++)
         {
+
             int bot, top, right, left;
             int bot0, top0, right0, left0;
             int height,width;
             // Tile bounds
             bot0 = isl_min(isl_max(Ti * TSIZEX, ft_size), R-ft_size);
-            top0 = isl_min( (Ti + ft_size) * TSIZEX , R-ft_size);
+            top0 = isl_min( (Ti + 1) * TSIZEX , R-ft_size);
             left0 = isl_min(isl_max(Tj * TSIZEY, ft_size), C-ft_size);
-            right0 = isl_min( (Tj + ft_size) * TSIZEY, C-ft_size);
+            right0 = isl_min( (Tj + 1) * TSIZEY, C-ft_size);
 
             width = right0 - left0;
             height = top0 - bot0;
@@ -117,7 +117,6 @@ extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * har
             #pragma omp task depend(out : Iy[:][:],  Ix[:][:])
             for (int  i = bot0; i <= top0 ; i++)
             {
-
                 #pragma ivdep
                 for (int  j = left0 ; j <= right0 ; j ++)
                 {
