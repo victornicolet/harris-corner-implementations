@@ -32,7 +32,7 @@ int main(int argc, char ** argv)
 
   if ( !image.data )
   {
-      printf("No image data \n");
+      printf("No image data ! Are you sure %s is an image ?\n", argv[1]);
       return -1;
   }
 
