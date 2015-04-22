@@ -5,7 +5,7 @@
 #include <omp.h>
 #include "bench_source/harris.h"
 
-//#define CHECK_FINAL_RESULT = true;
+#define CHECK_FINAL_RESULT = true;
 
 using namespace std;
 
@@ -85,9 +85,9 @@ int main(int argc, char ** argv)
     printf("Error : running took no time !");
     return -1;
   }
-  printf("Average time : %f ms\n", (float) (avgt / (nruns * CLOCKS_PER_SEC)));
+  printf("Average time : %f ms\n", (float) (1.0*avgt / (nruns * CLOCKS_PER_SEC)));
   printf("Diff beteween total loop time and sum of running times :\n ");
-  printf("\t %f\n",(float) (finish-init-avgt)/ CLOCKS_PER_SEC);
+  printf("\t %f\n",(float) 1.0* (finish-init-avgt)/ CLOCKS_PER_SEC);
 
   #ifdef CHECK_FINAL_RESULT
     cv::Mat imres = cv::Mat(R, C, CV_32F, res);
