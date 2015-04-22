@@ -1,4 +1,5 @@
-#include <opencv2/opencv.hpp>
+#include <cv.h>
+#include <highgui.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
