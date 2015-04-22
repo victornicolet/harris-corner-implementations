@@ -68,6 +68,9 @@ int main(int argc, char ** argv)
   // Running tests
   avgt = 0.0f;
   int init,finish;
+  /*
+  Do not use clock here we need elapsed "wall clock time", not total CPU time.
+  */
   init =  omp_get_wtime();
   for(int run = 1; run <= nruns; run++)
   {
