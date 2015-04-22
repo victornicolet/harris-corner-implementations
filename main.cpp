@@ -9,12 +9,12 @@
 
 using namespace std;
 
-static int minruns = 5;
+static int minruns = 1;
 
 int main(int argc, char ** argv)
 {
-  clock_t begin, end;
-  int stime, avgt;
+  double begin, end;
+  double stime, avgt;
   int R, C, nruns;
   float * res;
   float * data;
@@ -68,26 +68,26 @@ int main(int argc, char ** argv)
   // Running tests
   avgt = 0.0f;
   int init,finish;
-  init = clock();
+  init =  omp_get_wtime();
   for(int run = 1; run <= nruns; run++)
   {
     printf("Run %i : ",run);
-    begin = clock();
+    begin = omp_get_wtime();
     pipeline_harris(C, R, data, res);
-    end = clock();
+    end = omp_get_wtime();
     stime = end - begin;
-    printf("\t(%i)\t %f\n", omp_get_thread_num(),(float) stime  / CLOCKS_PER_SEC );
+    printf("\t\t %f ms\n",(double) stime * 1000.0 );
     avgt += stime;
   }
-  finish = clock();
+  finish =  omp_get_wtime();
   if(avgt == 0)
   {
     printf("Error : running took no time !");
     return -1;
   }
-  printf("Average time : %f ms\n", (float) (1.0*avgt / (nruns * CLOCKS_PER_SEC)));
+  printf("Average time : %f ms\n", (double) (1000.0*avgt / (nruns)));
   printf("Diff beteween total loop time and sum of running times :\n ");
-  printf("\t %f\n",(float) 1.0* (finish-init-avgt)/ CLOCKS_PER_SEC);
+  printf("\t %f\n",(double) 1.0* (finish-init-avgt));
 
   #ifdef CHECK_FINAL_RESULT
     cv::Mat imres = cv::Mat(R, C, CV_32F, res);
