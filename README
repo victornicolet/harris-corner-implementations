@@ -1,0 +1,20 @@
+The project presents different implementations of Harris's Corner Detection
+Algorithm.
+
+- bench_source/ contains the source files and the python top-level benchmarking
+suite from https://github.com/bondhugula/polymage-benchmarks.git ( Ravi Teja
+Mullapudi, Vinay Vasista, CSA Indian Institute of Science).
+
+- backups/ contains mostly previous versions of "dyntile" ( dynamic task scheduling
+into the static overlapping tiles), and other code backups.
+
+- logs/ contains test logs and small performance measures
+
+- profiling/ ( on branch profiling-records) contains profiles from two tools :
+Intel VTune Amplifier XE 2015 and perf
+
+- the parent directory contains the C++ top-level ( not working with all
+versions of the algorithm).
+
+Some "dyntile" implementations lead to segfaults when compiled with g++, although
+executing correctly when compiled with icpc.

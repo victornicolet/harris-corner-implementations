@@ -4,6 +4,7 @@ CXX_FLAGS=-openmp -ipo -g -O3 -xhost -fPIC -shared -debug parallel
 #CXX=g++
 #CXX_FLAGS=-fopenmp -g -O3 -fPIC -shared
 
+SRCS=bench_source/$(wildcard *.cpp)
 
 NO_OVERLAP_SUFFIX=_no_overlap
 DYN_SUFFIX=_dyn

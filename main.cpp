@@ -1,4 +1,5 @@
-#include <opencv2/opencv.hpp>
+#include <cv.h>
+#include <highgui.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -6,15 +7,15 @@
 #include "bench_source/harris.h"
 
 //#define CHECK_FINAL_RESULT = true;
-
+//#define RUN_PARALLEL = true
 using namespace std;
 
-static int minruns = 5;
+static int minruns = 1;
 
 int main(int argc, char ** argv)
 {
-  clock_t begin, end;
-  int stime, avgt;
+  double begin, end;
+  double stime, avgt;
   int R, C, nruns;
   float * res;
   float * data;
@@ -32,7 +33,7 @@ int main(int argc, char ** argv)
 
   if ( !image.data )
   {
-      printf("No image data \n");
+      printf("No image data ! Are you sure %s is an image ?\n", argv[1]);
       return -1;
   }
 
@@ -48,7 +49,7 @@ int main(int argc, char ** argv)
   printf("Nruns : %i || %s [%i, %i]\n", nruns, argv[1], R, C);
   printf("_________________________________________\n");
 
-  res = (float *) malloc((sizeof(float))*C*R);
+  res = (float *) calloc(R*C, sizeof(float));
 
   if(res == NULL)
   {
@@ -61,33 +62,46 @@ int main(int argc, char ** argv)
   for(int i= 0; i < R;i++){
     for(int j = 0; j < C;j++){
       sc = image.at<uchar>(i, j) ;
-      data[i * C + j] = sc.val[0]/255;
+      data[i * C + j] = (float) sc.val[0]/255;
     }
   }
 
   // Running tests
   avgt = 0.0f;
-  int init,finish;
-  init = clock();
+  double init,finish;
+  /*
+  Do not use clock here we need elapsed "wall clock time", not total CPU time.
+  */
+  init =  omp_get_wtime();
+  #ifdef RUN_PARALLEL
+    #pragma omp parallel for shared(avgt)
+  #endif
   for(int run = 1; run <= nruns; run++)
   {
-    printf("Run %i : ",run);
-    begin = clock();
+    begin = omp_get_wtime();
     pipeline_harris(C, R, data, res);
-    end = clock();
+    end = omp_get_wtime();
     stime = end - begin;
-    printf("\t(%i)\t %f\n", omp_get_thread_num(),(float) stime  / CLOCKS_PER_SEC );
+    printf("Run %i : \t\t %f ms\n", run, (double) stime * 1000.0 );
+
+    #ifdef RUN_PARALLEL
+      #pragma omp atomic
+    #endif
     avgt += stime;
   }
-  finish = clock();
+  finish =  omp_get_wtime();
   if(avgt == 0)
   {
-    printf("Error : running took no time !");
+    printf("Error : running didn't take time !");
     return -1;
   }
-  printf("Average time : %f ms\n", (float) (avgt / (nruns * CLOCKS_PER_SEC)));
-  printf("Diff beteween total loop time and sum of running times :\n ");
-  printf("\t %f\n",(float) (finish-init-avgt)/ CLOCKS_PER_SEC);
+  printf("Average time : %f ms\n", (double) (1000.0*avgt / (nruns)));
+  printf("Total time : %f ms\n", (double) (finish-init) * 1000.0);
+
+  #ifdef RUN_PARALLEL
+    printf("Gain total times to run %i instances in parallel / serial time :\n ", nruns);
+    printf("\t %f\n",(double) (finish-init)/(avgt));
+  #endif
 
   #ifdef CHECK_FINAL_RESULT
     cv::Mat imres = cv::Mat(R, C, CV_32F, res);
