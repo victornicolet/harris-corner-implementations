@@ -7,7 +7,7 @@
 #include "bench_source/harris.h"
 
 #define CHECK_FINAL_RESULT = true;
-
+//#define RUN_PARALLEL = true
 using namespace std;
 
 static int minruns = 1;
@@ -68,30 +68,40 @@ int main(int argc, char ** argv)
 
   // Running tests
   avgt = 0.0f;
-  int init,finish;
+  double init,finish;
   /*
   Do not use clock here we need elapsed "wall clock time", not total CPU time.
   */
   init =  omp_get_wtime();
+  #ifdef RUN_PARALLEL
+    #pragma omp parallel for shared(avgt)
+  #endif
   for(int run = 1; run <= nruns; run++)
   {
-    printf("Run %i : ",run);
     begin = omp_get_wtime();
     pipeline_harris(C, R, data, res);
     end = omp_get_wtime();
     stime = end - begin;
-    printf("\t\t %f ms\n",(double) stime * 1000.0 );
+    printf("Run %i : \t\t %f ms\n", run, (double) stime * 1000.0 );
+
+    #ifdef RUN_PARALLEL
+      #pragma omp atomic
+    #endif
     avgt += stime;
   }
   finish =  omp_get_wtime();
   if(avgt == 0)
   {
-    printf("Error : running took no time !");
+    printf("Error : running didn't take time !");
     return -1;
   }
   printf("Average time : %f ms\n", (double) (1000.0*avgt / (nruns)));
-  printf("Diff beteween total loop time and sum of running times :\n ");
-  printf("\t %f\n",(double) 1.0* (finish-init-avgt));
+  printf("Total time : %f ms\n", (double) (finish-init) * 1000.0);
+
+  #ifdef RUN_PARALLEL
+    printf("Gain total times to run %i instances in parallel / serial time :\n ", nruns);
+    printf("\t %f\n",(double) (finish-init)/(avgt));
+  #endif
 
   #ifdef CHECK_FINAL_RESULT
     cv::Mat imres = cv::Mat(R, C, CV_32F, res);
