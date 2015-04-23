@@ -2,7 +2,7 @@ APP=harris
 IMAGE=../images/grand_canyon2.jpg
 NRUNS=11
 include ./common.mk
-SOURCE_SUFFIXES = opt naive dyn nopar larger
+SOURCE_SUFFIXES = opt naive dyn nopar larger opt_r
 
 $(APP): $(APP)_opt.so
 	python main.py opt $(IMAGE) $(NRUNS)
@@ -21,3 +21,6 @@ $(APP)_larger: $(APP)_larger.so
 
 $(APP)_noverlap: $(APP)_noverlap.so
 	python main.py  noverlap $(IMAGE) $(NRUNS)
+
+$(APP)_opt_r : $(APP)_opt_r.so
+	python main.py  opt_r $(IMAGE) $(NRUNS)

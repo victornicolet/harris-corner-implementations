@@ -11,8 +11,12 @@ naive: $(APP)_naive.so
 dyntile: $(APP)_dyn.so
 nopar: $(APP)_nopar.so
 larger: $(APP)_larger
+opt_r:$(APP)_opt_r.so
 
 $(APP)_opt.so: $(APP)_polymage.cpp
+	$(CXX) $(CXX_FLAGS) $< -o $@
+
+$(APP)_opt_r.so: $(APP)_polymage_rewritten.cpp
 	$(CXX) $(CXX_FLAGS) $< -o $@
 
 $(APP)_naive.so: $(APP)_polymage_naive.cpp
