@@ -6,7 +6,7 @@
 #include <omp.h>
 #include "bench_source/harris.h"
 
-#define CHECK_FINAL_RESULT = true;
+//#define CHECK_FINAL_RESULT = true;
 //#define RUN_PARALLEL = true
 using namespace std;
 
@@ -49,7 +49,7 @@ int main(int argc, char ** argv)
   printf("Nruns : %i || %s [%i, %i]\n", nruns, argv[1], R, C);
   printf("_________________________________________\n");
 
-  res = (float *) malloc((sizeof(float))*C*R);
+  res = (float *) calloc(R*C, sizeof(float));
 
   if(res == NULL)
   {
@@ -62,7 +62,7 @@ int main(int argc, char ** argv)
   for(int i= 0; i < R;i++){
     for(int j = 0; j < C;j++){
       sc = image.at<uchar>(i, j) ;
-      data[i * C + j] = sc.val[0]/255;
+      data[i * C + j] = (float) sc.val[0]/255;
     }
   }
 
