@@ -1,0 +1,53 @@
+Ficus
+Profiling with :
+amplxe-cl -collect general-exploration -analyze-system --result-dir /home/vnicolet/no_overlap -- ./mtest images/grand_canyon2.jpg 10
+
+WITHOUT OVERLAPPING
+
+Output :
+_________________________________________
+Values settings :
+Nruns : 10 || images/grand_canyon2.jpg [2160, 3840]
+_________________________________________
+Average time : 189.814377 ms
+
+Core cycles when core not in halt state : 52317
+
+Total execution stalls :                    576
+Execution stalls due to L1 cache misses :   40
+Execution stalls due to memory subsystem :  558
+Execution stalls due to L2 cache misses :   110
+
+98.99%        155433  L1 hit
+ 0.61%            69  LFB hit
+ 0.17%            59  L2 hit
+ 0.17%            29  L3 hit
+ 0.02%             1  Remote Cache (1 hop) hit
+ 0.02%             1  Local RAM hit
+ 0.01%            14  Uncached hit
+ 0.01%             1  Remote RAM (1 hop) hit
+
+POLYMAGE OPTIMIZED VERSION:
+
+Output:
+_________________________________________
+Values settings :
+Nruns : 10 || images/grand_canyon2.jpg [2160, 3840]
+_________________________________________
+Average time : 273.494053 ms
+
+Core cycles when core not in halt state : 69760
+
+Total execution stalls :                    331
+Execution stalls due to L1 cache misses :   0
+Execution stalls due to memory subsystem :  310
+Execution stalls due to L2 cache misses :   5
+
+99.53%        255474  L1 hit                                                                                                                                                                                                          ◆
+ 0.24%            71  LFB hit                                                                                                                                                                                                         ▒
+ 0.07%            23  L3 hit                                                                                                                                                                                                          ▒
+ 0.05%            39  L2 hit                                                                                                                                                                                                          ▒
+ 0.04%             4  Local RAM hit                                                                                                                                                                                                   ▒
+ 0.04%             3  Remote Cache (1 hop) hit                                                                                                                                                                                        ▒
+ 0.02%             1  Remote RAM (1 hop) hit                                                                                                                                                                                          ▒
+ 0.01%             8  Uncached hit
