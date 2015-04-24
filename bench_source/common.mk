@@ -4,12 +4,12 @@ CXX_FLAGS=-openmp -ipo -O3 -xhost -fPIC -shared
 #CXX=g++
 #CXX_FLAGS=-fopenmp -g -O3 -fPIC -shared
 
-all: polymage naive dyntile nopar larger
+all: polymage naive dyntile sequential larger
 
 polymage: $(APP)_opt.so
 naive: $(APP)_naive.so
 dyntile: $(APP)_dyn.so
-nopar: $(APP)_nopar.so
+sequential: $(APP)_sequential.so
 larger: $(APP)_larger
 opt_r:$(APP)_opt_r.so
 
@@ -25,7 +25,7 @@ $(APP)_naive.so: $(APP)_polymage_naive.cpp
 $(APP)_dyn.so: $(APP)_dyntile.cpp
 	$(CXX) $(CXX_FLAGS) $< -o $@
 
-$(APP)_nopar.so: $(APP)_nopar.cpp
+$(APP)_sequential.so: $(APP)_sequential.cpp
 	$(CXX) $(CXX_FLAGS) $< -o $@
 
 $(APP)_larger.so: $(APP)_larger_noverlap.cpp

@@ -10,6 +10,7 @@ NO_OVERLAP=_no_overlap
 DYN=_dyn
 OPT=_opt
 NAIVE=_naive
+SEQ = _seq
 OPT_R=_opt_r
 LIB_PREFIX=lib
 
@@ -51,6 +52,9 @@ $(APP)$(NO_OVERLAP): $(LIB_PREFIX)$(APP)$(NO_OVERLAP).so
 
 $(APP)$(DYN): $(LIB_PREFIX)$(APP)$(DYN).so
 
+$(APP)$(NAIVE): $(LIB_PREFIX)$(APP)$(NAIVE).so
+$(APP)$(SEQ): $(LIB_PREFIX)$(APP)$(SEQ).so
+
 $(APP)$(OPT): $(LIB_PREFIX)$(APP)$(OPT).so
 $(APP)$(OPT_R): $(LIB_PREFIX)$(APP)$(OPT_R).so
 
@@ -58,6 +62,11 @@ $(LIB_PREFIX)$(APP)$(NO_OVERLAP).so: bench_source/$(APP)_larger_noverlap.cpp
 	$(CXX) $(CXX_FLAGS) $< -o bench_source/$@
 
 $(LIB_PREFIX)$(APP)$(DYN).so: bench_source/$(APP)_dyntile.cpp
+	$(CXX) $(CXX_FLAGS) $< -o bench_source/$@
+
+$(LIB_PREFIX)$(APP)$(NAIVE).so: bench_source/$(APP)_polymage_naive.cpp
+	$(CXX) $(CXX_FLAGS) $< -o bench_source/$@
+$(LIB_PREFIX)$(APP)$(SEQ).so: bench_source/$(APP)_sequential.cpp
 	$(CXX) $(CXX_FLAGS) $< -o bench_source/$@
 
 $(LIB_PREFIX)$(APP)$(OPT).so: bench_source/$(APP)_polymage.cpp
