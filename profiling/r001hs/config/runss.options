@@ -1,0 +1,12 @@
+-r
+/home/vnicolet/harris/bench_source/r001hs
+--data-limit-mb=500
+--stack-stitching
+--follow-child
+--itt-config=frame
+--stackwalk=offline
+--type=cpu:counters:nostack
+--type=cpu:stack
+--interval=10
+--
+./launchpythonbench.sh
