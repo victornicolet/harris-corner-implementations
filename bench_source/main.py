@@ -41,6 +41,7 @@ from utils import clock, initOptionals, \
 libharris = ctypes.cdll.LoadLibrary("./harris_"+sys.argv[1]+".so")
 harris = libharris.pipeline_harris
 
+init = clock()
 # initialize the app. parameters
 def initVars(image, nruns, rows, cols, args):
     if len(args) < 3 :
@@ -114,9 +115,16 @@ print "-------------------------------"
 print "avg time: ", (avgTime/(nruns-1))*1000, "ms"
 print "-------------------------------"
 
+end = clock()
+
+print "-------------------------------"
+print "Total running time: ", (end-init)*1000, "ms"
+print "-------------------------------"
+
 print
 print "Displaying corner map with increased intensity"
 print
+
 # Display
 cv2.namedWindow("input", cv2.WINDOW_NORMAL)
 cv2.namedWindow("output", cv2.WINDOW_NORMAL)
