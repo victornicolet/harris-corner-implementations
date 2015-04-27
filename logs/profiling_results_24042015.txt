@@ -1,7 +1,9 @@
 Ficus
 Profiling with :
 amplxe-cl -collect general-exploration -analyze-system --result-dir /home/vnicolet/no_overlap -- ./mtest images/grand_canyon2.jpg 10
-
+-----------------------------------------
+/!\ With only -O0 compiler optimization
+-----------------------------------------
 WITHOUT OVERLAPPING
 
 Output :
@@ -83,3 +85,80 @@ Performance counter stats for './mtest images/grand_canyon2.jpg 10':
        20,950,574      branch-misses             #    0.22% of all branches
 
       2.602650728 seconds time elapsed
+
+
+------------------------------------------------
+With -O3
+------------------------------------------------
+WITHOUT OVERLAPPING
+_________________________________________
+Values settings :
+Nruns : 10 || images/eso.jpg [8926, 13092]
+_________________________________________
+Run 1 : 		 854.117870 ms
+Run 2 : 		 315.505981 ms
+Run 3 : 		 318.589926 ms
+Run 4 : 		 316.816092 ms
+Run 5 : 		 317.402840 ms
+Run 6 : 		 315.088034 ms
+Run 7 : 		 320.101023 ms
+Run 8 : 		 317.519188 ms
+Run 9 : 		 317.120075 ms
+Run 10 : 		 317.535162 ms
+Average time : 317.297591 ms
+Total time : 3710.682869 ms
+
+(Input:12797): Gtk-WARNING **: cannot open display:
+
+ Performance counter stats for './mtest images/eso.jpg 10':
+
+      90813.874143      task-clock (msec)         #   13.001 CPUs utilized
+             2,623      context-switches          #    0.029 K/sec
+               129      cpu-migrations            #    0.001 K/sec
+         1,441,533      page-faults               #    0.016 M/sec
+   261,989,877,158      cycles                    #    2.885 GHz
+   215,993,183,765      stalled-cycles-frontend   #   82.44% frontend cycles idle
+   <not supported>      stalled-cycles-backend
+   140,564,844,393      instructions              #    0.54  insns per cycle
+                                                  #    1.54  stalled cycles per insn
+    29,128,922,373      branches                  #  320.754 M/sec
+        78,654,235      branch-misses             #    0.27% of all branches
+
+       6.985234156 seconds time elapsed
+
+
+WITH OVERLAPPING ( POLYMAGE )
+_________________________________________
+Values settings :
+Nruns : 10 || images/eso.jpg [8926, 13092]
+_________________________________________
+Run 1 : 		 133.296967 ms
+Run 2 : 		 107.234001 ms
+Run 3 : 		 107.496977 ms
+Run 4 : 		 96.758127 ms
+Run 5 : 		 96.153975 ms
+Run 6 : 		 96.231937 ms
+Run 7 : 		 96.371174 ms
+Run 8 : 		 96.230030 ms
+Run 9 : 		 95.865965 ms
+Run 10 : 		 96.131086 ms
+Average time : 98.719252 ms
+Total time : 1022.747040 ms
+
+(Input:12869): Gtk-WARNING **: cannot open display:
+
+ Performance counter stats for './mtest images/eso.jpg 10':
+
+      27850.112719      task-clock (msec)         #    6.725 CPUs utilized
+               967      context-switches          #    0.035 K/sec
+                94      cpu-migrations            #    0.003 K/sec
+           349,314      page-faults               #    0.013 M/sec
+    79,014,711,392      cycles                    #    2.837 GHz
+    58,793,363,337      stalled-cycles-frontend   #   74.41% frontend cycles idle
+   <not supported>      stalled-cycles-backend
+    67,155,270,105      instructions              #    0.85  insns per cycle
+                                                  #    0.88  stalled cycles per insn
+     8,881,201,012      branches                  #  318.893 M/sec
+        44,154,391      branch-misses             #    0.50% of all branches
+
+       4.141454091 seconds time elapsed
