@@ -10,7 +10,7 @@
 //#define RUN_PARALLEL = true
 using namespace std;
 
-static int minruns = 1;
+static int minruns = 2;
 
 int main(int argc, char ** argv)
 {
@@ -86,10 +86,12 @@ int main(int argc, char ** argv)
     stime = end - begin;
     printf("Run %i : \t\t %f ms\n", run, (double) stime * 1000.0 );
 
+    if(run !=1){
     #ifdef RUN_PARALLEL
       #pragma omp atomic
     #endif
     avgt += stime;
+    }
   }
   finish =  omp_get_wtime();
   if(avgt == 0)
@@ -97,7 +99,7 @@ int main(int argc, char ** argv)
     printf("Error : running didn't take time !");
     return -1;
   }
-  printf("Average time : %f ms\n", (double) (1000.0*avgt / (nruns)));
+  printf("Average time : %f ms\n", (double) (1000.0*avgt / (nruns-1)));
   printf("Total time : %f ms\n", (double) (finish-init) * 1000.0);
 
   #ifdef RUN_PARALLEL
