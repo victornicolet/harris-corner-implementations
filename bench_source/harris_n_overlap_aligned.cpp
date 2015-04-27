@@ -16,11 +16,11 @@ extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * har
   harris = (float *) (harris_void_arg);
 
 
-  float ** Ix = allocmatrix(R,C);
-  float ** Iy = allocmatrix(R,C);
-  float ** Sxx = allocmatrix(R,C);
-  float ** Sxy = allocmatrix(R,C);
-  float ** Syy = allocmatrix(R,C);
+  float ** Ix = aligned_allocmatrix(R,C);
+  float ** Iy = aligned_allocmatrix(R,C);
+  float ** Sxx = aligned_allocmatrix(R,C);
+  float ** Sxy = aligned_allocmatrix(R,C);
+  float ** Syy = aligned_allocmatrix(R,C);
 
 
 

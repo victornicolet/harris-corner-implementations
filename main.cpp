@@ -6,11 +6,11 @@
 #include <omp.h>
 #include "bench_source/harris.h"
 
-//#define CHECK_FINAL_RESULT = true;
+#define CHECK_FINAL_RESULT = true;
 //#define RUN_PARALLEL = true
 using namespace std;
 
-static int minruns = 1;
+static int minruns = 2;
 
 int main(int argc, char ** argv)
 {
@@ -50,6 +50,7 @@ int main(int argc, char ** argv)
   printf("_________________________________________\n");
 
   res = (float *) calloc(R*C, sizeof(float));
+  // posix_memalign((void **)&res, 64, sizeof(float)*R*C);
 
   if(res == NULL)
   {
@@ -59,6 +60,7 @@ int main(int argc, char ** argv)
   cv::Scalar sc;
   //data = (float *) image.data ;
   data = (float *) malloc(sizeof(float) * R * C);
+  // posix_memalign((void **)&data, 64, sizeof(float)*R*C);
   for(int i= 0; i < R;i++){
     for(int j = 0; j < C;j++){
       sc = image.at<uchar>(i, j) ;
@@ -84,10 +86,12 @@ int main(int argc, char ** argv)
     stime = end - begin;
     printf("Run %i : \t\t %f ms\n", run, (double) stime * 1000.0 );
 
+    if(run !=1){
     #ifdef RUN_PARALLEL
       #pragma omp atomic
     #endif
     avgt += stime;
+    }
   }
   finish =  omp_get_wtime();
   if(avgt == 0)
@@ -95,7 +99,7 @@ int main(int argc, char ** argv)
     printf("Error : running didn't take time !");
     return -1;
   }
-  printf("Average time : %f ms\n", (double) (1000.0*avgt / (nruns)));
+  printf("Average time : %f ms\n", (double) (1000.0*avgt / (nruns-1)));
   printf("Total time : %f ms\n", (double) (finish-init) * 1000.0);
 
   #ifdef RUN_PARALLEL
