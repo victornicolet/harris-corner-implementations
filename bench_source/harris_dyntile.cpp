@@ -3,73 +3,7 @@
 #include <malloc.h>
 #include <cmath>
 #include <string.h>
-#define isl_min(x,y) ((x) < (y) ? (x) : (y))
-#define isl_max(x,y) ((x) > (y) ? (x) : (y))
-#define isl_floord(n,d) (((n)<0) ? -((-(n)+(d)-1)/(d)) : (n)/(d))
-
-#define mat_cell(A,i,j) A[i][j]
-#define tab_cell(A,i,j) A[((i)*C + (j))]
-#define sobelY(A,i,j) (tab_cell(A, i-1, j-1) *( -0.0833333333333f) + (tab_cell(A, i-1, j+1) * 0.0833333333333f) + \
-(tab_cell(A, i, j-1) * -0.166666666667f) + (tab_cell(A, i, j+1) * 0.166666666667f) + \
-(tab_cell(A, i+1, j-1) * -0.0833333333333f) +(tab_cell(A, i+1, j+1) * 0.0833333333333f))
-
-#define sobelX(A,i,j) (tab_cell(A, i-1, j-1) *( -0.0833333333333f) + (tab_cell(A, i+1, j-1) * 0.0833333333333f) + \
-(tab_cell(A, i+1, j) * 0.166666666667f) + (tab_cell(A, i-1, j) * (-0.166666666667f)) + \
-(tab_cell(A, i-1, j+1) * (-0.0833333333333f)) + (tab_cell(A, i+1, j+1) * 0.0833333333333f))
-
-#define filter3(A,i,j) mat_cell(A, i-2, j-2) + mat_cell(A, i-2, j-1) + mat_cell(A, i-2, j) + \
-mat_cell(A, i-2, j+1) + mat_cell(A, i-2, j+2) + mat_cell(A, i-1, j-2) + \
-mat_cell(A, i-1, j-1) + mat_cell(A, i-1, j) + mat_cell(A, i-1, j+1) + \
-mat_cell(A, i-1, j+2) + mat_cell(A, i, j-2)   + mat_cell(A, i, j-1)   + \
-mat_cell(A, i, j)   + mat_cell(A, i, j+1)   + mat_cell(A, i, j+2) + \
-mat_cell(A, i+1, j-2) + mat_cell(A, i+1, j-1) + mat_cell(A, i+1, j) + \
-mat_cell(A, i+1, j+1) + mat_cell(A, i+1, j+2)+ mat_cell(A, i+2, j-2) + \
-mat_cell(A, i+1, j-1) + mat_cell(A, i+2, j) + mat_cell(A, i+2, j+1) + \
-mat_cell(A, i+2, j+2)
-
-//([mat_cell\(]+)[A,]+ ([i]+[-|+]*[1-2]*[, j]+[-|+]*[1-2]*[\)]+) -> $1 A, $2 * $1 B, $2
-#define filter3sq(A,B,i,j) mat_cell( A, i-2, j-2) * mat_cell( B, i-2, j-2) + \
-mat_cell( A, i-2, j-1) * mat_cell( B, i-2, j-1) +\
-mat_cell( A, i-2, j) * mat_cell( B, i-2, j) + \
-mat_cell( A, i-2, j+1) * mat_cell( B, i-2, j+1) + \
-mat_cell( A, i-2, j+2) * mat_cell( B, i-2, j+2) + \
-mat_cell( A, i-1, j-2) * mat_cell( B, i-1, j-2) + \
-mat_cell( A, i-1, j-1) * mat_cell( B, i-1, j-1) + \
-mat_cell( A, i-1, j) * mat_cell( B, i-1, j) +  \
-mat_cell( A, i-1, j+1) * mat_cell( B, i-1, j+1) + \
-mat_cell( A, i-1, j+2) * mat_cell( B, i-1, j+2) + \
-mat_cell( A, i, j-2) * mat_cell( B, i, j-2)   + \
-mat_cell( A, i, j-1) * mat_cell( B, i, j-1)   + \
-mat_cell( A, i, j) * mat_cell( B, i, j)   + \
-mat_cell( A, i, j+1) * mat_cell( B, i, j+1)   + \
-mat_cell( A, i, j+2) * mat_cell( B, i, j+2) + \
-mat_cell( A, i+1, j-2) * mat_cell( B, i+1, j-2) + \
-mat_cell( A, i+1, j-1) * mat_cell( B, i+1, j-1) + \
-mat_cell( A, i+1, j) * mat_cell( B, i+1, j) + \
-mat_cell( A, i+1, j+1) * mat_cell( B, i+1, j+1) + \
-mat_cell( A, i+1, j+2) * mat_cell( B, i+1, j+2)+ \
-mat_cell( A, i+2, j-2) * mat_cell( B, i+2, j-2) + \
-mat_cell( A, i+1, j-1) * mat_cell( B, i+1, j-1) + \
-mat_cell( A, i+2, j) * mat_cell( B, i+2, j) + \
-mat_cell( A, i+2, j+1) * mat_cell( B, i+2, j+1) + \
-mat_cell( A, i+2, j+2) * mat_cell( B, i+2, j+2)
-
-#define filter2(A,i,j)  mat_cell(A, i-1, j-1) + mat_cell(A, i-1, j) + mat_cell(A, i-1, j+1) + \
-mat_cell(A, i, j-1)   + mat_cell(A, i, j)   + mat_cell(A, i, j+1)  + \
-mat_cell(A, i+1, j-1) + mat_cell(A, i+1, j) + mat_cell(A, i+1, j+1)
-
-#define filter2sq(A,B,i,j) mat_cell(A, i-1, j-1) * mat_cell(B, i-1, j-1) +\
-mat_cell(A, i-1, j) * mat_cell(B, i-1, j) +\
-mat_cell(A, i-1, j+1) * mat_cell(B, i-1, j+1) + \
-mat_cell(A, i, j-1) * mat_cell(B, i, j-1) + \
-mat_cell(A, i, j) * mat_cell(B, i, j)  + \
-mat_cell(A, i, j+1) * mat_cell(B, i, j+1)  + \
-mat_cell(A, i+1, j-1) * mat_cell(B, i+1, j-1) + \
-mat_cell(A, i+1, j) * mat_cell(B, i+1, j) +\
-mat_cell(A, i+1, j+1) * mat_cell(B, i+1, j+1)
-
-#define det(i,j) tile_cell(Sxx, i, j) * tile_cell(Syy, i, j) - tile_cell(Sxy, i, j) * tile_cell(Sxy, i, j)
-
+#include "harris.h"
 
 extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * harris_void_arg)
 {
@@ -77,8 +11,6 @@ extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * har
     img = (float *) (img_void_arg);
     float * harris;
     harris = (float *) (harris_void_arg);
-
-
 
     // Tile size
     static int TSIZEX = 32;

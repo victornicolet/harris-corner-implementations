@@ -16,5 +16,14 @@ Intel VTune Amplifier XE 2015 and perf
 - the parent directory contains the C++ top-level ( not working with all
 versions of the algorithm).
 
-Some "dyntile" implementations lead to segfaults when compiled with g++, although
-executing correctly when compiled with icpc.
+
+--------------------------------------------------------------------------------
+Make :
+  make $(LIB)= harris compiles the shared library with the $(LIB) implementation to be used by the test
+
+  With $(LIB) one of the following :
+  NO_OVERLAP DYN OPT NAIVE SEQ OPT_R ALIGNED LIB_PREFIX
+
+  make mtests compiles the test file
+
+==> Run a test : ./mtest (IMAGE) (NRUNS)
