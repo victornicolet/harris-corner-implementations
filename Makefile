@@ -12,6 +12,7 @@ OPT=_opt
 NAIVE=_naive
 SEQ = _seq
 OPT_R=_opt_r
+ALIGNED=_aligned
 LIB_PREFIX=lib
 
 _CXX_FLAGS =-O0 -Lbench_source/ -fPIC -lharris -Wall -Werror -g -openmp
@@ -49,6 +50,7 @@ mtest : main.cpp
 $(APP)_libs : $(APP)$(DYN) $(APP)$(NO_OVERLAP) $(APP)$(OPT)
 
 $(APP)$(NO_OVERLAP): $(LIB_PREFIX)$(APP)$(NO_OVERLAP).so
+$(APP)$(ALIGNED): $(LIB_PREFIX)$(APP)$(ALIGNED).so
 
 $(APP)$(DYN): $(LIB_PREFIX)$(APP)$(DYN).so
 
@@ -60,6 +62,8 @@ $(APP)$(OPT_R): $(LIB_PREFIX)$(APP)$(OPT_R).so
 
 $(LIB_PREFIX)$(APP)$(NO_OVERLAP).so: bench_source/$(APP)_larger_noverlap.cpp
 	$(CXX) $(CXX_FLAGS) $< -o bench_source/$@
+$(LIB_PREFIX)$(APP)$(ALIGNED).so: bench_source/$(APP)_n_overlap_aligned.cpp
+		$(CXX) $(CXX_FLAGS) $< -o bench_source/$@
 
 $(LIB_PREFIX)$(APP)$(DYN).so: bench_source/$(APP)_dyntile.cpp
 	$(CXX) $(CXX_FLAGS) $< -o bench_source/$@
