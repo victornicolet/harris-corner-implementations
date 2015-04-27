@@ -3,12 +3,7 @@
 #include <malloc.h>
 #include <cmath>
 #include <string.h>
-#include "harris.h"
-#define isl_min(x,y) ((x) < (y) ? (x) : (y))
-#define isl_max(x,y) ((x) > (y) ? (x) : (y))
-#define isl_floord(n,d) (((n)<0) ? -((-(n)+(d)-1)/(d)) : (n)/(d))
-
-
+#include "harris_tiles.h"
 
 extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * harris_void_arg)
 {
