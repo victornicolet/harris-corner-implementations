@@ -49,8 +49,8 @@ int main(int argc, char ** argv)
   printf("Nruns : %i || %s [%i, %i]\n", nruns, argv[1], R, C);
   printf("_________________________________________\n");
 
-  //res = (float *) calloc(R*C, sizeof(float));
-  posix_memalign((void **)&res, 64, sizeof(float)*R*C);
+  res = (float *) calloc(R*C, sizeof(float));
+  // posix_memalign((void **)&res, 64, sizeof(float)*R*C);
 
   if(res == NULL)
   {
@@ -59,8 +59,8 @@ int main(int argc, char ** argv)
   }
   cv::Scalar sc;
   //data = (float *) image.data ;
-  //data = (float *) malloc(sizeof(float) * R * C);
-  posix_memalign((void **)&data, 64, sizeof(float)*R*C);
+  data = (float *) malloc(sizeof(float) * R * C);
+  // posix_memalign((void **)&data, 64, sizeof(float)*R*C);
   for(int i= 0; i < R;i++){
     for(int j = 0; j < C;j++){
       sc = image.at<uchar>(i, j) ;
