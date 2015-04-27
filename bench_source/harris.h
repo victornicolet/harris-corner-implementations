@@ -90,6 +90,26 @@ inline float ** allocmatrix(int rows, int cols){
   return Res;
 }
 
+inline float ** aligned_allocmatrix(int rows, int cols){
+  int memalign;
+  float ** memptr;
+  float ** Res = (float **) malloc(sizeof(float *) * rows);
+  for(int i = 0; i < rows ; i++){
+
+    memalign = posix_memalign((void **)&Res[i], 64, sizeof(float) * cols );
+
+    if( memalign !=0 ){
+      printf("Error while allocating aligned two dimensional matrix at line %i \n",i);
+      return NULL;
+    }
+  }
+  if( Res == NULL ){
+    printf("Error while allocating two dimensionnal matrix \n");
+    return NULL;
+  }
+  return Res;
+}
+
 inline int freematrix(float ** Mat, int rows){
   for(int i = 0; i < rows; i++){
     free(Mat[i]);

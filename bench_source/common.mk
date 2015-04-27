@@ -1,5 +1,5 @@
 CXX=icpc
-CXX_FLAGS=-openmp -ipo -O3 -xhost -fPIC -shared
+CXX_FLAGS=-openmp -ipo -O0 -xhost -fPIC -shared
 
 #CXX=g++
 #CXX_FLAGS=-fopenmp -g -O3 -fPIC -shared

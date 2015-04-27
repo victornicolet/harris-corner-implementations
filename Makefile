@@ -1,5 +1,5 @@
 CXX=icpc
-CXX_FLAGS=-openmp -ipo -g -O0 -xhost -fPIC -shared -debug parallel
+CXX_FLAGS=-openmp -ipo -g -O3 -xhost -fPIC -shared -debug parallel
 
 #CXX=g++
 #CXX_FLAGS=-fopenmp -g -O3 -fPIC -shared
@@ -15,7 +15,7 @@ OPT_R=_opt_r
 ALIGNED=_aligned
 LIB_PREFIX=lib
 
-_CXX_FLAGS =-O0 -Lbench_source/ -fPIC -lharris -Wall -Werror -g -openmp
+_CXX_FLAGS =-O3 -Lbench_source/ -fPIC -lharris -Wall -Werror -g -openmp
 RUNPATH = -Wl,-rpath=bench_source/
 OPCV_FLAGS =`pkg-config --cflags opencv`
 LDFLAGS+=`pkg-config --libs opencv`
