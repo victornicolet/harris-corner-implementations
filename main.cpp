@@ -6,11 +6,11 @@
 #include <omp.h>
 #include "bench_source/harris.h"
 
-#define CHECK_FINAL_RESULT = true;
+//#define CHECK_FINAL_RESULT = true;
 //#define RUN_PARALLEL = true
 using namespace std;
 
-static int minruns = 2;
+static int minruns = 1;
 
 int main(int argc, char ** argv)
 {
@@ -78,19 +78,18 @@ int main(int argc, char ** argv)
   #ifdef RUN_PARALLEL
     #pragma omp parallel for shared(avgt)
   #endif
-  for(int run = 1; run <= nruns; run++)
+  for(int run = 0; run <= nruns; run++)
   {
     begin = omp_get_wtime();
     pipeline_harris(C, R, data, res);
     end = omp_get_wtime();
     stime = end - begin;
-    printf("Run %i : \t\t %f ms\n", run, (double) stime * 1000.0 );
-
-    if(run !=1){
-    #ifdef RUN_PARALLEL
-      #pragma omp atomic
-    #endif
-    avgt += stime;
+    if(run !=0){
+      printf("Run %i : \t\t %f ms\n", run, (double) stime * 1000.0 );
+      #ifdef RUN_PARALLEL
+        #pragma omp atomic
+      #endif
+      avgt += stime;
     }
   }
   finish =  omp_get_wtime();
@@ -99,7 +98,7 @@ int main(int argc, char ** argv)
     printf("Error : running didn't take time !");
     return -1;
   }
-  printf("Average time : %f ms\n", (double) (1000.0*avgt / (nruns-1)));
+  printf("Average time : %f ms\n", (double) (1000.0*avgt / (nruns)));
   printf("Total time : %f ms\n", (double) (finish-init) * 1000.0);
 
   #ifdef RUN_PARALLEL
