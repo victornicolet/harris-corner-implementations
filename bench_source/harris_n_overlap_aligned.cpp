@@ -49,7 +49,7 @@ extern "C" void  pipeline_harris_aligned(int  C, int  R, float ** img, float ** 
           top = isl_min( (Ti + 1) * TSIZEX+1 , R-ft_size-1);
           left = isl_max(Tj * TSIZEY, ft_size+1);
           right = isl_min( (Tj + 1) * TSIZEY, C-ft_size-1);
-
+          
           // Tile size after smoothing filter
           width = right - left;
           height = top - bot;

@@ -100,31 +100,40 @@ inline float ** allocmatrix(int rows, int cols){
   return Res;
 }
 
-inline float ** alloc_line_aligned_matrix(int R, int C){
-  int memalign;
+inline float ** alloc_aligned_tiles(int R, int C,int TSIZEX,int TSIZEY){
   int cache_line_size;
+  int memalign;
+
   #if defined(linux)
     cache_line_size = sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
   #else
-    #error Platform not supported
+    cache_line_size = 64;
+    printf("Warning using default cache line size : %i", cache_line_size);
   #endif
+  
+  int n_tiles_x = R / TSIZEX;
+  int n_tiles_y = R / TSIZEY;
+  mat = (float **) alloc(n_tiles_x * n_tiles_y * sizeof(float *));
 
-  float ** memptr;
-  float ** Res = (float **) malloc(sizeof(float *) * R);
-  for(int i = 0; i < R ; i++){
+  for(int i = 0; i < n_tiles_x; i++){
+    for(int j = 0; i < n_tiles_y; j++){
+      x = isl_min( (i + 1) * TSIZEX , R) - isl_max(i * TSIZEX, 1);
+      y = isl_min( (j + 1) * TSIZEY, C-1) - isl_max(j * TSIZEY, 1);
+      memalign = posix_memalign((void **)&mat[i], cache_line_size, sizeof(float) * x * y);
 
-    memalign = posix_memalign((void **)&Res[i], cache_line_size, sizeof(float) * C );
-
-    if( memalign !=0 ){
-      printf("Error while allocating aligned two dimensional matrix at line %i \n",i);
-      return NULL;
+      if(memalign != 0){
+        printf("Error while allocating tile at %i : %i\n" , i, j);
+        return NULL;
+      }
     }
   }
-  if( Res == NULL ){
-    printf("Error while allocating two dimensionnal matrix \n");
+
+  if( mat == NULL){
+    printf("Error while allocating matrix !\n");
     return NULL;
   }
-  return Res;
+
+  return mat;
 }
 
 inline int freematrix(float ** Mat, int rows){
