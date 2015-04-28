@@ -86,6 +86,16 @@ Performance counter stats for './mtest images/grand_canyon2.jpg 10':
 
       2.602650728 seconds time elapsed
 
+Perf mem :
+98.55%        112235  L1 hit
+ 1.02%           386  LFB hit
+ 0.16%            45  L3 hit
+ 0.13%           102  L2 hit
+ 0.10%             7  Local RAM hit
+ 0.02%             1  Remote Cache (1 hop) hit
+ 0.02%            23  Uncached hit
+
+
 
 ------------------------------------------------
 With -O3
@@ -162,3 +172,14 @@ Total time : 1022.747040 ms
         44,154,391      branch-misses             #    0.50% of all branches
 
        4.141454091 seconds time elapsed
+
+Perf mem :
+90.91%        342813  L1 hit
+ 6.22%          2386  LFB hit
+ 0.66%           380  L3 hit
+ 0.64%           591  L2 hit
+ 0.64%           118  Remote Cache (1 hop) hit
+ 0.61%           515  Uncached hit
+ 0.15%            27  L3 miss
+ 0.09%            19  Local RAM hit
+ 0.08%            11  Remote RAM (1 hop) hit
