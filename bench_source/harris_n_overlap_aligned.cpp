@@ -15,18 +15,16 @@ extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * har
   float * harris;
   harris = (float *) (harris_void_arg);
 
-
-  float ** Ix = aligned_allocmatrix(R,C);
-  float ** Iy = aligned_allocmatrix(R,C);
-  float ** Sxx = aligned_allocmatrix(R,C);
-  float ** Sxy = aligned_allocmatrix(R,C);
-  float ** Syy = aligned_allocmatrix(R,C);
-
-
-
   // Tile size
   static int TSIZEX = 32;
   static int TSIZEY = 256;
+
+  float ** Ix = alloc_aligned_tiles(R, C, TSIZEX, TSIZEY);
+  float ** Iy = alloc_aligned_tiles(R, C, TSIZEX, TSIZEY);
+  float ** Sxx = alloc_aligned_tiles(R, C, TSIZEX, TSIZEY);
+  float ** Sxy = alloc_aligned_tiles(R, C, TSIZEX, TSIZEY);
+  float ** Syy = alloc_aligned_tiles(R, C, TSIZEX, TSIZEY);
+
   // Filter size
   // filter2 -> ft_size =1 or filter3 -> ft_size = 2
   static int ft_size = 1;

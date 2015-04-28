@@ -1,3 +1,5 @@
+#include <unistd.h>
+
 #ifndef HARRIS
 #define HARRIS
 
@@ -90,13 +92,20 @@ inline float ** allocmatrix(int rows, int cols){
   return Res;
 }
 
-inline float ** aligned_allocmatrix(int rows, int cols){
+inline float ** alloc_aligned_tiles(int R, int C, int TSIZEX, int TSIZEY){
   int memalign;
-  float ** memptr;
-  float ** Res = (float **) malloc(sizeof(float *) * rows);
-  for(int i = 0; i < rows ; i++){
+  int cache_line_size;
+  #if defined(linux)
+    cache_line_size = sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
+  #else
+    #error Platform not supported
+  #endif
 
-    memalign = posix_memalign((void **)&Res[i], 64, sizeof(float) * cols );
+  float ** memptr;
+  float ** Res = (float **) malloc(sizeof(float *) * R);
+  for(int i = 0; i < R ; i++){
+
+    memalign = posix_memalign((void **)&Res[i], cache_line_size, sizeof(float) * C );
 
     if( memalign !=0 ){
       printf("Error while allocating aligned two dimensional matrix at line %i \n",i);
