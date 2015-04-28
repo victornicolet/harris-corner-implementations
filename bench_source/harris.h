@@ -19,6 +19,14 @@
                       (tab_cell(A, i+1, j) * 0.166666666667f) + (tab_cell(A, i-1, j) * (-0.166666666667f)) + \
                        (tab_cell(A, i-1, j+1) * (-0.0833333333333f)) + (tab_cell(A, i+1, j+1) * 0.0833333333333f))
 
+#define m_sobelY(A,i,j) (mat_cell(A, i-1, j-1) *( -0.0833333333333f) + (mat_cell(A, i-1, j+1) * 0.0833333333333f) + \
+                     (mat_cell(A, i, j-1) * -0.166666666667f) + (mat_cell(A, i, j+1) * 0.166666666667f) + \
+                      (mat_cell(A, i+1, j-1) * -0.0833333333333f) +(mat_cell(A, i+1, j+1) * 0.0833333333333f))
+
+#define m_sobelX(A,i,j) (mat_cell(A, i-1, j-1) *( -0.0833333333333f) + (mat_cell(A, i+1, j-1) * 0.0833333333333f) + \
+                   (mat_cell(A, i+1, j) * 0.166666666667f) + (mat_cell(A, i-1, j) * (-0.166666666667f)) + \
+                    (mat_cell(A, i-1, j+1) * (-0.0833333333333f)) + (mat_cell(A, i+1, j+1) * 0.0833333333333f))
+
 // Macros implementing various smoothing filters. Use regexes to edit !
 
 #define filter3(A,i,j) mat_cell(A, i-2, j-2) + mat_cell(A, i-2, j-1) + mat_cell(A, i-2, j) + \
@@ -92,7 +100,7 @@ inline float ** allocmatrix(int rows, int cols){
   return Res;
 }
 
-inline float ** alloc_aligned_tiles(int R, int C, int TSIZEX, int TSIZEY){
+inline float ** alloc_line_aligned_matrix(int R, int C){
   int memalign;
   int cache_line_size;
   #if defined(linux)
@@ -128,5 +136,6 @@ inline int freematrix(float ** Mat, int rows){
 }
 
 extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * harris_void_arg);
+extern "C" void  pipeline_harris_aligned(int  C, int  R, float ** img_void_arg, float ** harris_void_arg);
 
 #endif /*HARRIS*/

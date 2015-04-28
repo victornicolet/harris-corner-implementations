@@ -8,22 +8,17 @@
 #include <omp.h>
 #include "harris.h"
 
-extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * harris_void_arg)
+extern "C" void  pipeline_harris_aligned(int  C, int  R, float ** img, float ** harris)
 {
-  float * img;
-  img = (float *) (img_void_arg);
-  float * harris;
-  harris = (float *) (harris_void_arg);
-
   // Tile size
   static int TSIZEX = 32;
   static int TSIZEY = 256;
 
-  float ** Ix = alloc_aligned_tiles(R, C, TSIZEX, TSIZEY);
-  float ** Iy = alloc_aligned_tiles(R, C, TSIZEX, TSIZEY);
-  float ** Sxx = alloc_aligned_tiles(R, C, TSIZEX, TSIZEY);
-  float ** Sxy = alloc_aligned_tiles(R, C, TSIZEX, TSIZEY);
-  float ** Syy = alloc_aligned_tiles(R, C, TSIZEX, TSIZEY);
+  float ** Ix = alloc_line_aligned_matrix(R,C);
+  float ** Iy = alloc_line_aligned_matrix(R,C);
+  float ** Sxx = alloc_line_aligned_matrix(R,C);
+  float ** Sxy = alloc_line_aligned_matrix(R,C);
+  float ** Syy = alloc_line_aligned_matrix(R,C);
 
   // Filter size
   // filter2 -> ft_size =1 or filter3 -> ft_size = 2
@@ -69,8 +64,8 @@ extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * har
               #pragma ivdep
               for (int  j = left0 ; j < right0 ; j ++)
               {
-                mat_cell(Iy,i,j) = sobelY(img, i, j);
-                mat_cell(Ix,i,j) = sobelX(img, i, j);
+                mat_cell(Iy,i,j) = m_sobelY(img, i, j);
+                mat_cell(Ix,i,j) = m_sobelX(img, i, j);
               }
             }
           }
@@ -127,7 +122,7 @@ extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * har
             #pragma ivdep
             for (int  j = left ; j < right ; j ++)
             {
-              tab_cell(harris,i,j) =  det(i, j) - (0.04f * ((mat_cell(Sxx, i, j) + mat_cell(Syy, i, j)) * (mat_cell(Sxx, i, j) + mat_cell(Syy, i, j))));
+              mat_cell(harris,i,j) =  det(i, j) - (0.04f * ((mat_cell(Sxx, i, j) + mat_cell(Syy, i, j)) * (mat_cell(Sxx, i, j) + mat_cell(Syy, i, j))));
             }
           }
 
