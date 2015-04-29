@@ -6,24 +6,39 @@
 #include <omp.h>
 #include "bench_source/harris.h"
 
-//#define CHECK_FINAL_RESULT = true;
+// CHECK_FINAL_RESULT toggles the display of the input and output images
+#define CHECK_FINAL_RESULT
+// Experiment : try to run multiples pipelines in parallel
 //#define RUN_PARALLEL = true
+// Exp. : align lines of matrixes in memory ( assuming tile size &- cache line size)
+#define VERSION_ALIGNED
+// Check if image to matrix translation produces the correst output
+#define CHECK_LOADING_DATA
 using namespace std;
 
 static int minruns = 1;
 
 int main(int argc, char ** argv)
 {
+  #ifdef VERSION_ALIGNED
+    printf("VERSION_ALIGNED\n");
+  #endif
+
   double begin, end;
   double stime, avgt;
   int R, C, nruns;
-  float * res;
-  float * data;
+  #ifdef VERSION_ALIGNED
+    float ** res;
+    float ** data;
+  #else
+    float * res;
+    float * data;
+  #endif
 
   if ( argc != 3 )
   {
       printf("usage: harris <Image_Path> <Nruns>\n");
-      return -1;
+     return -1;
   }
 
   cv::Mat image;
@@ -49,24 +64,37 @@ int main(int argc, char ** argv)
   printf("Nruns : %i || %s [%i, %i]\n", nruns, argv[1], R, C);
   printf("_________________________________________\n");
 
-  res = (float *) calloc(R*C, sizeof(float));
-  // posix_memalign((void **)&res, 64, sizeof(float)*R*C);
+  #ifdef VERSION_ALIGNED
+    res = alloc_array_lines(R, C);
+  #else
+    res = (float *) calloc(R*C, sizeof(float));
+  #endif
 
   if(res == NULL)
   {
     printf("Error while allocating result table of size %ld B\n", (sizeof(float))*C*R );
     return -1;
   }
+
   cv::Scalar sc;
-  //data = (float *) image.data ;
-  data = (float *) malloc(sizeof(float) * R * C);
-  // posix_memalign((void **)&data, 64, sizeof(float)*R*C);
-  for(int i= 0; i < R;i++){
-    for(int j = 0; j < C;j++){
-      sc = image.at<uchar>(i, j) ;
-      data[i * C + j] = (float) sc.val[0]/255;
+
+  #ifdef VERSION_ALIGNED
+    data = (float **) alloc_array_lines(R, C);
+    for(int i= 0; i < R;i++){
+      for(int j = 0; j < C;j++){
+        sc = image.at<uchar>(i, j) ;
+        data[i][j] = (float) sc.val[0]/255;
+      }
     }
-  }
+  #else
+    data = (float *) malloc(R*C*sizeof(float));
+    for(int i= 0; i < R;i++){
+      for(int j = 0; j < C;j++){
+        sc = image.at<uchar>(i, j) ;
+        data[i*C+j] = (float) sc.val[0]/255;
+      }
+    }
+  #endif
 
   // Running tests
   avgt = 0.0f;
@@ -81,7 +109,11 @@ int main(int argc, char ** argv)
   for(int run = 0; run <= nruns; run++)
   {
     begin = omp_get_wtime();
-    pipeline_harris(C, R, data, res);
+    #ifdef VERSION_ALIGNED
+      pipeline_harris_aligned(C, R, data, res);
+    #else
+      pipeline_harris(C, R, data, res);
+    #endif
     end = omp_get_wtime();
     stime = end - begin;
     if(run !=0){
@@ -106,8 +138,41 @@ int main(int argc, char ** argv)
     printf("\t %f\n",(double) (finish-init)/(avgt));
   #endif
 
+  // Checking images using OpenCV
+  
+  #ifdef VERSION_ALIGNED
+    float * t_res = (float *) malloc(sizeof(float)*R*C);
+    for(int i = 0; i < R; i++){
+      for(int j = 0; j < C; j++){
+        t_res[i * C + j] = res[i][j];
+      }
+    }
+  #else
+   t_res = res;
+  #endif
+
+  #ifdef CHECK_LOADING_DATA
+    #ifdef VERSION_ALIGNED
+    float * t_data = (float *) malloc(sizeof(float)*R*C);
+    for(int i = 0; i < R; i++){
+      for(int j = 0; j < C; j++){
+        t_data[i * C + j] = data[i][j];
+      }
+    }
+    cv::Mat loaded_data = cv::Mat(R,C,CV_32F, t_data);
+    #else
+    cv::Mat loaded_data = cv::Mat(R,C,CV_32F, data);
+    #endif
+
+    cv::namedWindow( "Check data", cv::WINDOW_NORMAL);
+    cv::imshow( "Check data", loaded_data);
+    cv::waitKey(0);
+    cv::destroyAllWindows();
+    loaded_data.release();
+  #endif
+
   #ifdef CHECK_FINAL_RESULT
-    cv::Mat imres = cv::Mat(R, C, CV_32F, res);
+    cv::Mat imres = cv::Mat(R, C, CV_32F, t_res);
     cv::namedWindow( "Input", cv::WINDOW_NORMAL );
     cv::imshow( "Input", image );
     cv::namedWindow( "Output", cv::WINDOW_NORMAL );
@@ -115,7 +180,7 @@ int main(int argc, char ** argv)
     cv::waitKey(0);
     cv::destroyAllWindows();
     imres.release();
-  #endif // CHECK_FINAl_RESULT
+  #endif // CHECK_FINAL_RESULT
 
   image.release();
   free(res);
