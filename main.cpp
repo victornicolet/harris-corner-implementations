@@ -7,17 +7,23 @@
 #include "bench_source/harris.h"
 
 // CHECK_FINAL_RESULT toggles the display of the input and output images
-#define CHECK_FINAL_RESULT = true;
+#define CHECK_FINAL_RESULT
 // Experiment : try to run multiples pipelines in parallel
 //#define RUN_PARALLEL = true
 // Exp. : align lines of matrixes in memory ( assuming tile size &- cache line size)
 #define VERSION_ALIGNED
+// Check if image to matrix translation produces the correst output
+#define CHECK_LOADING_DATA
 using namespace std;
 
 static int minruns = 1;
 
 int main(int argc, char ** argv)
 {
+  #ifdef VERSION_ALIGNED
+    printf("VERSION_ALIGNED\n");
+  #endif
+
   double begin, end;
   double stime, avgt;
   int R, C, nruns;
@@ -132,8 +138,41 @@ int main(int argc, char ** argv)
     printf("\t %f\n",(double) (finish-init)/(avgt));
   #endif
 
+  // Checking images using OpenCV
+  
+  #ifdef VERSION_ALIGNED
+    float * t_res = (float *) malloc(sizeof(float)*R*C);
+    for(int i = 0; i < R; i++){
+      for(int j = 0; j < C; j++){
+        t_res[i * C + j] = res[i][j];
+      }
+    }
+  #else
+   t_res = res;
+  #endif
+
+  #ifdef CHECK_LOADING_DATA
+    #ifdef VERSION_ALIGNED
+    float * t_data = (float *) malloc(sizeof(float)*R*C);
+    for(int i = 0; i < R; i++){
+      for(int j = 0; j < C; j++){
+        t_data[i * C + j] = data[i][j];
+      }
+    }
+    cv::Mat loaded_data = cv::Mat(R,C,CV_32F, t_data);
+    #else
+    cv::Mat loaded_data = cv::Mat(R,C,CV_32F, data);
+    #endif
+
+    cv::namedWindow( "Check data", cv::WINDOW_NORMAL);
+    cv::imshow( "Check data", loaded_data);
+    cv::waitKey(0);
+    cv::destroyAllWindows();
+    loaded_data.release();
+  #endif
+
   #ifdef CHECK_FINAL_RESULT
-    cv::Mat imres = cv::Mat(R, C, CV_32F, res);
+    cv::Mat imres = cv::Mat(R, C, CV_32F, t_res);
     cv::namedWindow( "Input", cv::WINDOW_NORMAL );
     cv::imshow( "Input", image );
     cv::namedWindow( "Output", cv::WINDOW_NORMAL );

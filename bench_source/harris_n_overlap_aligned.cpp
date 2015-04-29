@@ -122,7 +122,7 @@ extern "C" void  pipeline_harris_aligned(int  C, int  R, float ** img, float ** 
             #pragma ivdep
             for (int  j = left ; j < right ; j ++)
             {
-              mat_cell(harris,i,j) =  det(i, j) - (0.04f * ((mat_cell(Sxx, i, j) + mat_cell(Syy, i, j)) * (mat_cell(Sxx, i, j) + mat_cell(Syy, i, j))));
+                mat_cell(harris,i,j) =  det(i, j) - (0.04f * ((mat_cell(Sxx, i, j) + mat_cell(Syy, i, j)) * (mat_cell(Sxx, i, j) + mat_cell(Syy, i, j))));
             }
           }
 

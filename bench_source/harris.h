@@ -1,4 +1,5 @@
 #include <unistd.h>
+#include <errno.h>
 
 #ifndef HARRIS
 #define HARRIS
@@ -49,6 +50,12 @@ inline float ** alloc_array_lines(int R, int C){
 
       if(memalign != 0){
         printf("Error while allocating tile at %i\n" , i);
+        return NULL;
+      } else if (memalign == EINVAL) {
+        printf("alloc_array_lines error : alignment parameter is not a power of two \n");
+        return NULL;
+      } else if (memalign == ENOMEM) {
+        printf("alloc_array_lines error : insufficient memory\n");
         return NULL;
       }
   }
