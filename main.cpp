@@ -32,7 +32,7 @@ int main(int argc, char ** argv)
   if ( argc != 3 )
   {
       printf("usage: harris <Image_Path> <Nruns>\n");
-      return -1;
+     return -1;
   }
 
   cv::Mat image;
@@ -59,19 +59,21 @@ int main(int argc, char ** argv)
   printf("_________________________________________\n");
 
   #ifdef VERSION_ALIGNED
-    res = alloc_line_aligned_matrix(R,C);
+    res = alloc_array_lines(R, C);
   #else
     res = (float *) calloc(R*C, sizeof(float));
   #endif
+
   if(res == NULL)
   {
     printf("Error while allocating result table of size %ld B\n", (sizeof(float))*C*R );
     return -1;
   }
+
   cv::Scalar sc;
 
   #ifdef VERSION_ALIGNED
-    data = (float **) alloc_line_aligned_matrix(R,C);
+    data = (float **) alloc_array_lines(R, C);
     for(int i= 0; i < R;i++){
       for(int j = 0; j < C;j++){
         sc = image.at<uchar>(i, j) ;

@@ -14,11 +14,11 @@ extern "C" void  pipeline_harris_aligned(int  C, int  R, float ** img, float ** 
   static int TSIZEX = 32;
   static int TSIZEY = 256;
 
-  float ** Ix = alloc_line_aligned_matrix(R,C);
-  float ** Iy = alloc_line_aligned_matrix(R,C);
-  float ** Sxx = alloc_line_aligned_matrix(R,C);
-  float ** Sxy = alloc_line_aligned_matrix(R,C);
-  float ** Syy = alloc_line_aligned_matrix(R,C);
+  float ** Ix = alloc_array_lines(R,C);
+  float ** Iy = alloc_array_lines(R,C);
+  float ** Sxx = alloc_array_lines(R,C);
+  float ** Sxy = alloc_array_lines(R,C);
+  float ** Syy = alloc_array_lines(R,C);
 
   // Filter size
   // filter2 -> ft_size =1 or filter3 -> ft_size = 2
@@ -49,7 +49,7 @@ extern "C" void  pipeline_harris_aligned(int  C, int  R, float ** img, float ** 
           top = isl_min( (Ti + 1) * TSIZEX+1 , R-ft_size-1);
           left = isl_max(Tj * TSIZEY, ft_size+1);
           right = isl_min( (Tj + 1) * TSIZEY, C-ft_size-1);
-          
+
           // Tile size after smoothing filter
           width = right - left;
           height = top - bot;
