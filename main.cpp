@@ -139,7 +139,7 @@ int main(int argc, char ** argv)
   #endif
 
   // Checking images using OpenCV
-  
+
   #ifdef VERSION_ALIGNED
     float * t_res = (float *) malloc(sizeof(float)*R*C);
     for(int i = 0; i < R; i++){
