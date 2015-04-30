@@ -23,6 +23,7 @@ inline int get_cache_line_size(){
   #endif
 }
 
+
 inline float ** allocmatrix(int rows, int cols){
   float ** Res = (float **) malloc(sizeof(float *) * rows);
   for(int i = 0; i < rows ; i++){

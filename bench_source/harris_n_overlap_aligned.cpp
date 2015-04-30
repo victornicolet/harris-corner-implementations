@@ -13,6 +13,8 @@ extern "C" void  pipeline_harris_aligned(int  C, int  R, float * img, float * ha
   // Tile size
   static int TSIZEX = 32;
   static int TSIZEY = 256;
+  static int taskx = R / TSIZEX;
+  static int tasky = C / TSIZEY;
 
   float * Ix = falloc_aligned_padded(R,C,CACHE_LINE_SIZE);
   float * Iy = falloc_aligned_padded(R,C,CACHE_LINE_SIZE);
@@ -20,6 +22,11 @@ extern "C" void  pipeline_harris_aligned(int  C, int  R, float * img, float * ha
   float * Sxy = falloc_aligned_padded(R,C,CACHE_LINE_SIZE);
   float * Syy = falloc_aligned_padded(R,C,CACHE_LINE_SIZE);
 
+  int Ix_index[taskx][tasky];
+  int Iy_index[taskx][tasky];
+  int Sxx_index[taskx][tasky];
+  int Sxy_index[taskx][tasky];
+  int Syy_index[taskx][tasky];
   // Filter size
   // filter2 -> ft_size =1 or filter3 -> ft_size = 2
   static int ft_size = 1;
@@ -55,8 +62,8 @@ extern "C" void  pipeline_harris_aligned(int  C, int  R, float * img, float * ha
           height = top - bot;
 
           // Loading task + sobel filter
-          #pragma omp task depend(out : Iy,\
-            Ix)
+          #pragma omp task depend(out : Iy_index[Ti][Tj],\
+            Ix_index[Ti][Tj])
           {
             for (int  i = bot0; i < top0 ; i++)
             {
@@ -72,8 +79,8 @@ extern "C" void  pipeline_harris_aligned(int  C, int  R, float * img, float * ha
 
           // Computational tasks : Ixx & Sxx fused
 
-          #pragma omp task depend(out : Syy) \
-              depend(in : Iy)
+          #pragma omp task depend(out : Syy_index[Ti][Tj]) \
+              depend(in : Iy_index[Ti][Tj])
           {
             for (int  i = bot; i < top ; i++)
             {
@@ -85,9 +92,9 @@ extern "C" void  pipeline_harris_aligned(int  C, int  R, float * img, float * ha
             }
           }
 
-          #pragma omp task depend(in : Ix,\
-               Iy) \
-            depend(out : Sxy)
+          #pragma omp task depend(in : Ix_index[Ti][Tj],\
+               Iy_index[Ti][Tj]) \
+            depend(out : Sxy_index[Ti][Tj])
           {
             for (int  i = bot; i < top ; i++)
             {
@@ -99,8 +106,8 @@ extern "C" void  pipeline_harris_aligned(int  C, int  R, float * img, float * ha
             }
           }
 
-          #pragma omp task depend(in : Ix) \
-            depend( out : Sxx)
+          #pragma omp task depend(in : Ix_index[Ti][Tj]) \
+            depend( out : Sxx_index[Ti][Tj])
           {
             for (int  i = bot; i < top ; i++)
             {
@@ -114,9 +121,9 @@ extern "C" void  pipeline_harris_aligned(int  C, int  R, float * img, float * ha
           }
 
           // det + trace
-          #pragma omp task depend( in : Sxx, \
-             Sxy, \
-             Syy)
+          #pragma omp task depend( in : Sxx_index[Ti][Tj], \
+             Sxy_index[Ti][Tj], \
+             Syy_index[Ti][Tj])
           for (int  i = bot; i < top ; i++)
           {
             #pragma ivdep
