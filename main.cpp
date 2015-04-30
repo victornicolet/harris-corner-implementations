@@ -11,9 +11,11 @@
 // Experiment : try to run multiples pipelines in parallel
 //#define RUN_PARALLEL = true
 // Exp. : align lines of matrixes in memory ( assuming tile size &- cache line size)
-#define VERSION_ALIGNED
+//#define VERSION_ALIGNED
+// Exp. : align lines of matrixes in memory + padding
+#define VERSION_ALIGNED_PADDED 1
 // Check if image to matrix translation produces the correst output
-#define CHECK_LOADING_DATA
+//#define CHECK_LOADING_DATA
 using namespace std;
 
 static int minruns = 1;
@@ -27,6 +29,7 @@ int main(int argc, char ** argv)
   double begin, end;
   double stime, avgt;
   int R, C, nruns;
+  float * t_res;
   #ifdef VERSION_ALIGNED
     float ** res;
     float ** data;
@@ -34,6 +37,8 @@ int main(int argc, char ** argv)
     float * res;
     float * data;
   #endif
+
+  int const cache_line_size = get_cache_line_size();
 
   if ( argc != 3 )
   {
@@ -65,7 +70,9 @@ int main(int argc, char ** argv)
   printf("_________________________________________\n");
 
   #ifdef VERSION_ALIGNED
-    res = alloc_array_lines(R, C);
+    res = alloc_array_lines(R, C, cache_line_size);
+  #elif VERSION_ALIGNED_PADDED
+    res = falloc_aligned_padded(R, C, cache_line_size);
   #else
     res = (float *) calloc(R*C, sizeof(float));
   #endif
@@ -79,7 +86,7 @@ int main(int argc, char ** argv)
   cv::Scalar sc;
 
   #ifdef VERSION_ALIGNED
-    data = (float **) alloc_array_lines(R, C);
+    data = (float **) alloc_array_lines(R, C, cache_line_size);
     for(int i= 0; i < R;i++){
       for(int j = 0; j < C;j++){
         sc = image.at<uchar>(i, j) ;
@@ -87,7 +94,11 @@ int main(int argc, char ** argv)
       }
     }
   #else
-    data = (float *) malloc(R*C*sizeof(float));
+    #ifdef VERSION_ALIGNED_PADDED
+      data = falloc_aligned_padded(R, C, cache_line_size);
+    #else
+      data = (float *) malloc(R*C*sizeof(float));
+    #endif
     for(int i= 0; i < R;i++){
       for(int j = 0; j < C;j++){
         sc = image.at<uchar>(i, j) ;
@@ -110,6 +121,8 @@ int main(int argc, char ** argv)
   {
     begin = omp_get_wtime();
     #ifdef VERSION_ALIGNED
+      pipeline_harris_aligned(C, R, data, res);
+    #elif VERSION_ALIGNED_PADDED
       pipeline_harris_aligned(C, R, data, res);
     #else
       pipeline_harris(C, R, data, res);
@@ -169,6 +182,9 @@ int main(int argc, char ** argv)
     cv::waitKey(0);
     cv::destroyAllWindows();
     loaded_data.release();
+    #ifdef VERSION_ALIGNED
+     free(t_data);
+    #endif
   #endif
 
   #ifdef CHECK_FINAL_RESULT
@@ -179,12 +195,19 @@ int main(int argc, char ** argv)
     cv::imshow( "Output", imres * 65535.0 );
     cv::waitKey(0);
     cv::destroyAllWindows();
+    free(t_res);
     imres.release();
   #endif // CHECK_FINAL_RESULT
 
+  #ifdef VERSION_ALIGNED
+    freematrix(res, R);
+    freematrix(data, R)
+  #else
+    free(res);
+    free(data);
+  #endif
+
   image.release();
-  free(res);
-  free(data);
   return 0;
 
 }

@@ -112,8 +112,8 @@ inline float ** alloc_array_tiles(int R, int C, int TSIZEX, int TSIZEY){
 
 inline float * falloc_aligned_padded(int R, int C, int cache_line_size){
   int padded_width = ((C * sizeof(float) * cache_line_size - 1)/ cache_line_size)*(cache_line_size / sizeof(float));
-  float f_aligned_padded;
-  posix_memalign((void **)&f_aligned_padded, cache_line_size);
+  float * f_aligned_padded;
+  posix_memalign((void **)&f_aligned_padded, cache_line_size, R * padded_width);
   return f_aligned_padded;
 }
 
@@ -126,7 +126,7 @@ inline int freematrix(float ** Mat, int rows){
 }
 
 extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * harris_void_arg);
-extern "C" void  pipeline_harris_aligned(int  C, int  R, float ** img_void_arg, float ** harris_void_arg);
+extern "C" void  pipeline_harris_aligned(int  C, int  R, float * img_void_arg, float * harris_void_arg);
 
 // Macros
 
@@ -199,7 +199,20 @@ extern "C" void  pipeline_harris_aligned(int  C, int  R, float ** img_void_arg, 
                         mat_cell(A, i+1, j) * mat_cell(B, i+1, j) +\
                         mat_cell(A, i+1, j+1) * mat_cell(B, i+1, j+1)
 
+#define t_filter2sq(A,B,i,j) tab_cell(A, i-1, j-1) * tab_cell(B, i-1, j-1) +\
+                        tab_cell(A, i-1, j) * tab_cell(B, i-1, j) +\
+                        tab_cell(A, i-1, j+1) * tab_cell(B, i-1, j+1) + \
+                        tab_cell(A, i, j-1) * tab_cell(B, i, j-1) + \
+                        tab_cell(A, i, j) * tab_cell(B, i, j)  + \
+                        tab_cell(A, i, j+1) * tab_cell(B, i, j+1)  + \
+                        tab_cell(A, i+1, j-1) * tab_cell(B, i+1, j-1) + \
+                        tab_cell(A, i+1, j) * tab_cell(B, i+1, j) +\
+                        tab_cell(A, i+1, j+1) * tab_cell(B, i+1, j+1)
+
 #define det(i,j)        mat_cell(Sxx, i, j) * mat_cell(Syy, i, j) - \
                         mat_cell(Sxy, i, j) * mat_cell(Sxy, i, j)
+
+#define t_det(i,j)        tab_cell(Sxx, i, j) * tab_cell(Syy, i, j) - \
+                        tab_cell(Sxy, i, j) * tab_cell(Sxy, i, j)
 
 #endif /*HARRIS*/

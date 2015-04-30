@@ -8,17 +8,17 @@
 #include <omp.h>
 #include "harris.h"
 
-extern "C" void  pipeline_harris_aligned(int  C, int  R, float ** img, float ** harris)
+extern "C" void  pipeline_harris_aligned(int  C, int  R, float * img, float * harris)
 {
   // Tile size
   static int TSIZEX = 32;
   static int TSIZEY = 256;
 
-  float ** Ix = alloc_array_lines(R,C,CACHE_LINE_SIZE);
-  float ** Iy = alloc_array_lines(R,C,CACHE_LINE_SIZE);
-  float ** Sxx = alloc_array_lines(R,C,CACHE_LINE_SIZE);
-  float ** Sxy = alloc_array_lines(R,C,CACHE_LINE_SIZE);
-  float ** Syy = alloc_array_lines(R,C,CACHE_LINE_SIZE);
+  float * Ix = falloc_aligned_padded(R,C,CACHE_LINE_SIZE);
+  float * Iy = falloc_aligned_padded(R,C,CACHE_LINE_SIZE);
+  float * Sxx = falloc_aligned_padded(R,C,CACHE_LINE_SIZE);
+  float * Sxy = falloc_aligned_padded(R,C,CACHE_LINE_SIZE);
+  float * Syy = falloc_aligned_padded(R,C,CACHE_LINE_SIZE);
 
   // Filter size
   // filter2 -> ft_size =1 or filter3 -> ft_size = 2
@@ -55,8 +55,8 @@ extern "C" void  pipeline_harris_aligned(int  C, int  R, float ** img, float ** 
           height = top - bot;
 
           // Loading task + sobel filter
-          #pragma omp task depend(out : Iy[bot0:height][ left0:width],\
-            Ix[bot0:height][left0:width])
+          #pragma omp task depend(out : Iy,\
+            Ix)
           {
             for (int  i = bot0; i < top0 ; i++)
             {
@@ -64,65 +64,65 @@ extern "C" void  pipeline_harris_aligned(int  C, int  R, float ** img, float ** 
               #pragma ivdep
               for (int  j = left0 ; j < right0 ; j ++)
               {
-                mat_cell(Iy,i,j) = m_sobelY(img, i, j);
-                mat_cell(Ix,i,j) = m_sobelX(img, i, j);
+                tab_cell(Iy,i,j) = sobelY(img, i, j);
+                tab_cell(Ix,i,j) = sobelX(img, i, j);
               }
             }
           }
 
           // Computational tasks : Ixx & Sxx fused
 
-          #pragma omp task depend(out : Syy[bot:height][left:width]) \
-              depend(in : Iy[bot-ft_size:height+ft_size][left-ft_size:width+ft_size])
+          #pragma omp task depend(out : Syy) \
+              depend(in : Iy)
           {
             for (int  i = bot; i < top ; i++)
             {
               #pragma ivdep
               for (int  j = left ; j < right ; j ++)
               {
-                mat_cell(Syy,i,j) = filter2sq( Iy, Iy, i,j) ;
+                tab_cell(Syy,i,j) = t_filter2sq( Iy, Iy, i,j) ;
               }
             }
           }
 
-          #pragma omp task depend(in : Ix[bot-ft_size:height+ft_size][left-ft_size:width+ft_size],\
-               Iy[bot-ft_size:height+ft_size][left-ft_size:width+ft_size]) \
-            depend(out : Sxy[bot:height][left:width])
+          #pragma omp task depend(in : Ix,\
+               Iy) \
+            depend(out : Sxy)
           {
             for (int  i = bot; i < top ; i++)
             {
               #pragma ivdep
               for (int  j = left ; j < right ; j ++)
               {
-                mat_cell(Sxy, i, j) = filter2sq( Ix, Iy, i,j) ;
+                tab_cell(Sxy, i, j) = t_filter2sq( Ix, Iy, i,j) ;
               }
             }
           }
 
-          #pragma omp task depend(in : Ix[bot-ft_size:height+ft_size][left-ft_size:width+ft_size]) \
-            depend( out : Sxx[bot:height][left:width])
+          #pragma omp task depend(in : Ix) \
+            depend( out : Sxx)
           {
             for (int  i = bot; i < top ; i++)
             {
               #pragma ivdep
               for (int  j = left ; j < right ; j ++)
               {
-                mat_cell(Sxx, i, j) = filter2sq( Ix,Ix, i,j) ;
+                tab_cell(Sxx, i, j) = t_filter2sq( Ix,Ix, i,j) ;
               }
             }
 
           }
 
           // det + trace
-          #pragma omp task depend( in : Sxx[bot:height][left:width], \
-             Sxy[bot:height][left:width], \
-             Syy[bot:height][left:width])
+          #pragma omp task depend( in : Sxx, \
+             Sxy, \
+             Syy)
           for (int  i = bot; i < top ; i++)
           {
             #pragma ivdep
             for (int  j = left ; j < right ; j ++)
             {
-                mat_cell(harris,i,j) =  det(i, j) - (0.04f * ((mat_cell(Sxx, i, j) + mat_cell(Syy, i, j)) * (mat_cell(Sxx, i, j) + mat_cell(Syy, i, j))));
+                tab_cell(harris,i,j) =  t_det(i, j) - (0.04f * ((tab_cell(Sxx, i, j) + tab_cell(Syy, i, j)) * (tab_cell(Sxx, i, j) + tab_cell(Syy, i, j))));
             }
           }
 
@@ -131,9 +131,9 @@ extern "C" void  pipeline_harris_aligned(int  C, int  R, float ** img, float ** 
     }
   }
 
-  freematrix(Ix, R);
-  freematrix(Iy, R);
-  freematrix(Sxx, R);
-  freematrix(Sxy, R);
-  freematrix(Syy, R);
+  free(Ix);
+  free(Iy);
+  free(Sxx);
+  free(Sxy);
+  free(Syy);
 }
