@@ -11,9 +11,9 @@
 // Experiment : try to run multiples pipelines in parallel
 //#define RUN_PARALLEL = true
 // Exp. : align lines of matrixes in memory ( assuming tile size &- cache line size)
-#define VERSION_ALIGNED
+//#define VERSION_ALIGNED
 // Check if image to matrix translation produces the correst output
-#define CHECK_LOADING_DATA
+//#define CHECK_LOADING_DATA
 using namespace std;
 
 static int minruns = 1;
@@ -169,6 +169,11 @@ int main(int argc, char ** argv)
     cv::waitKey(0);
     cv::destroyAllWindows();
     loaded_data.release();
+
+    #ifdef VERSION_ALIGNED
+      free(t_data);
+    #endif
+
   #endif
 
   #ifdef CHECK_FINAL_RESULT
@@ -180,10 +185,14 @@ int main(int argc, char ** argv)
     cv::waitKey(0);
     cv::destroyAllWindows();
     imres.release();
+    free(t_res);
   #endif // CHECK_FINAL_RESULT
 
+  #ifdef VERSION_ALIGNED
+    free(res);
+  #endif
+
   image.release();
-  free(res);
   free(data);
   return 0;
 
