@@ -13,12 +13,13 @@ extern "C" void  pipeline_harris_aligned(int  C, int  R, float ** img, float ** 
   // Tile size
   static int TSIZEX = 32;
   static int TSIZEY = 256;
+  int cache_line_size = get_cache_line_size();
 
-  float ** Ix = alloc_array_lines(R,C);
-  float ** Iy = alloc_array_lines(R,C);
-  float ** Sxx = alloc_array_lines(R,C);
-  float ** Sxy = alloc_array_lines(R,C);
-  float ** Syy = alloc_array_lines(R,C);
+  float ** Ix = alloc_array_lines(R,C,cache_line_size);
+  float ** Iy = alloc_array_lines(R,C,cache_line_size);
+  float ** Sxx = alloc_array_lines(R,C,cache_line_size);
+  float ** Sxy = alloc_array_lines(R,C,cache_line_size);
+  float ** Syy = alloc_array_lines(R,C,cache_line_size);
 
   // Filter size
   // filter2 -> ft_size =1 or filter3 -> ft_size = 2

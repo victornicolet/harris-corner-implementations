@@ -12,6 +12,17 @@
 #define tab_cell(A,i,j) A[((i)*C + (j))]
 #define tile_cell(A,i,j) mat_cell(A,i-bot0,j-left0)
 
+inline int get_cache_line_size(){
+  int cache_line_size;
+  #if defined(linux)
+    cache_line_size = sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
+  #else
+    cache_line_size = 64;
+    printf("Warning using default cache line size : %i", cache_line_size);
+  #endif
+  return cache_line_size;
+}
+
 inline float ** allocmatrix(int rows, int cols){
   float ** Res = (float **) malloc(sizeof(float *) * rows);
   for(int i = 0; i < rows ; i++){
@@ -30,18 +41,9 @@ inline float ** allocmatrix(int rows, int cols){
 }
 
 // Allocate an array where each line is aligned in memory.
-inline float ** alloc_array_lines(int R, int C){
-  int cache_line_size;
+inline float ** alloc_array_lines(int R, int C, int cache_line_size){
   int memalign;
   float ** mat;
-
-  #if defined(linux)
-    cache_line_size = sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
-  #else
-    cache_line_size = 64;
-    printf("Warning using default cache line size : %i", cache_line_size);
-  #endif
-
   mat = (float **) malloc(R * sizeof(float *));
 
   for(int i = 0; i < R; i++){

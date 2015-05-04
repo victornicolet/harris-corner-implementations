@@ -11,7 +11,7 @@
 // Experiment : try to run multiples pipelines in parallel
 //#define RUN_PARALLEL = true
 // Exp. : align lines of matrixes in memory ( assuming tile size &- cache line size)
-//#define VERSION_ALIGNED
+#define VERSION_ALIGNED
 // Check if image to matrix translation produces the correst output
 //#define CHECK_LOADING_DATA
 using namespace std;
@@ -22,6 +22,7 @@ int main(int argc, char ** argv)
 {
   #ifdef VERSION_ALIGNED
     printf("VERSION_ALIGNED\n");
+    int cache_line_size = get_cache_line_size();
   #endif
 
   double begin, end;
@@ -65,7 +66,7 @@ int main(int argc, char ** argv)
   printf("_________________________________________\n");
 
   #ifdef VERSION_ALIGNED
-    res = alloc_array_lines(R, C);
+    res = alloc_array_lines(R, C, cache_line_size);
   #else
     res = (float *) calloc(R*C, sizeof(float));
   #endif
@@ -79,7 +80,7 @@ int main(int argc, char ** argv)
   cv::Scalar sc;
 
   #ifdef VERSION_ALIGNED
-    data = (float **) alloc_array_lines(R, C);
+    data = (float **) alloc_array_lines(R, C, cache_line_size);
     for(int i= 0; i < R;i++){
       for(int j = 0; j < C;j++){
         sc = image.at<uchar>(i, j) ;
