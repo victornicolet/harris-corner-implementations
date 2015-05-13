@@ -3,7 +3,7 @@
 #include <malloc.h>
 #include <cmath>
 #include <string.h>
-#include "harris_tiles.h"
+#include "harris.h"
 
 extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * harris_void_arg)
 {

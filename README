@@ -44,4 +44,6 @@ versions of the algorithm).
 
   #Profiling
   - profiling with vtune
-    make [BENCH_RESULT=result_directory] [IMAGE=image/..] [RUNS=no_pipeline_runs] vtune
+    make  [BENCH_RESULT=result_directory] 
+          [IMAGE=image/..] 
+          [RUNS=no_pipeline_runs] vtune

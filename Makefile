@@ -84,11 +84,12 @@ $(HARRIS_IMPLEMS): %.so : bench_source/%.cpp
 	$(CXX) $(CXX_FLAGS) $< -o bench_source/libs/$@ 
 
 clean:
-	$(RM) ./mtest bench_source/*.pyc bench_source/*.so bench_source/graph.png
+	$(RM) ./mtest bench_source/*.pyc bench_source/*.so bench_source/graph.png \
+		bench_source/libs/*.so
 
 tar:
-	tar -cf harris-corner-implementations.tar bench_source/ images/ backups/ \
-		Makefile main.cpp
+	tar -cf harris-corner-implementations.tar bench_source/ images/ Makefile \
+		main.cpp
 
 vtune: mtest
 	rm -rf $(BENCH_RESULT_DIR)
