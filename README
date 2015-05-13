@@ -33,11 +33,15 @@ versions of the algorithm).
   #Test file
   make [T=library] [CXX=compiler] mtest
   --> Use T=aligned if you have compiled the library using memory alignment
-  make [T=library] [CXX=compiler] run
-  --> makes mtest, and teh runs a test with a default image and 10 runs.
+  Other macros you can pass as options to make:
+  CHECK_FINAL_RESULT : display the final image
+  CHECK_LOADING_DATA : display the initial image, as input data of the pipeline
+
+  make [T=library] [CXX=compiler] [IMAGE=] [NRUNS=pipeline_runs] run
+  --> makes mtest, and then runs a test with a default image and 10 runs.
 
 ==> Run a test : ./mtest (IMAGE) (NRUNS)
 
   #Profiling
   - profiling with vtune
-    make [BENCH_RESULT=result_directory] vtune
+    make [BENCH_RESULT=result_directory] [IMAGE=image/..] [RUNS=no_pipeline_runs] vtune

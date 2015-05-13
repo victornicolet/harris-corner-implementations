@@ -12,7 +12,7 @@ IMAGE=images/grand_canyon2.jpg
 RUNS=10
 APP=harris
 #Profiling
-BENCH_RESULT_DIR=bench_default/
+BENCH_RESULT=bench_default
 VTUNE=amplxe-cl
 VTFLAGS=-collect general-exploration -analyze-system
 VT_R_DIR=--result-dir $(BENCH_RESULT_DIR)
@@ -93,4 +93,4 @@ tar:
 vtune: mtest
 	rm -rf $(BENCH_RESULT_DIR)
 	$(VTUNE) $(VTFLAGS) $(VT_R_DIR) -- ./mtest $(IMAGE) $(RUNS)
-	tar -cf $(BENCH_RESULT_DIR).tar $(BENCH_RESULT_DIR)
+	tar -zcf $(BENCH_RESULT).tar $(BENCH_RESULT)
