@@ -1,8 +1,12 @@
-CXX=icpc
-CXX_FLAGS=-openmp -ipo -g -O3 -xhost -fPIC -shared -debug parallel
+#Set CXX = icpc or CXX=gcc/g++
 
-#CXX=g++
-#CXX_FLAGS=-fopenmp -g -O3 -fPIC -shared
+ifeq ($(CXX),icpc)
+	CXX_FLAGS=-openmp -ipo -g -O3 -xhost -fPIC -shared -debug parallel
+else
+	CXX_FLAGS=-fopenmp -g -O3 -fPIC -shared
+endif
+
+RM=rm -f
 
 SRCS=bench_source/$(wildcard *.cpp)
 
@@ -15,13 +19,53 @@ OPT_R=_opt_r
 ALIGNED=_aligned
 LIB_PREFIX=lib
 
-_CXX_FLAGS =-O3 -Lbench_source/ -fPIC -lharris -Wall -Werror -g -openmp
+
+# Main test file compilation flags
+_CXX_FLAGS =-O3 -Lbench_source/ -fPIC -Wall -g -openmp
+
+ifeq ($(CXX),icpc)
+	_CXX_FLAGS +=-openmp
+else
+	_CXX_FLAGS += -fopenmp
+endif
+ifdef CHECK_FINAL_RESULT
+	_CXX_FLAGS += -D CHECK_FINAL_RESULT
+endif
+ifdef CHECK_LOADING_DATA
+	_CXX_FLAGS += -D CHECK_LOADING_DATA
+endif
+ifeq ($(T),aligned)
+	_CXX_FLAGS+= -D VERSION_ALIGNED
+endif
 RUNPATH = -Wl,-rpath=bench_source/
 OPCV_FLAGS =`pkg-config --cflags opencv`
-LDFLAGS+=`pkg-config --libs opencv`
+LDFLAGS = `pkg-config --libs opencv` -lharris
 
-
+#Default test values
+IMAGE=images/grand_canyon2.jpg
+RUNS=10
 APP=harris
+
+#Listing all valid implementations
+#HARRIS_IMPLEMS = harris_dyntile.so
+ifeq ($(T),aligned)
+	W_mesg = "\n **** When compiling test file, ensure you use the aligned \
+		version with T=aligned ! **** \n"
+ HARRIS_IMPLEMS = harris_n_overlap_aligned.so
+ CXX_FLAGS+= -D VERSION_ALIGNED
+else
+	ifdef T
+		HARRIS_IMPLEMS = harris_$(T).so
+	else
+	W_mesg = "Compiled libs ! \n If you want to use aligned version, use \
+		 make T=aligned libs"
+	HARRIS_IMPLEMS = harris_larger_noverlap.so
+	HARRIS_IMPLEMS += harris_polymage_naive.so
+	HARRIS_IMPLEMS += harris_polymage_rewritten.so
+	HARRIS_IMPLEMS += harris_sequential.so
+	endif
+endif
+
 
 .PHONY : all
 
@@ -29,54 +73,26 @@ all : mesg mtest harris_libs
 
 mesg :
 	@echo "Parameters : "
-	@echo "- Dyn suffix : " $(DYN)
-	@echo "- NO_OVERLAP suffix : " $(NO_OVERLAP)
-	@echo "- Polymage optimized : " $(OPT)
-	@echo $(MESG)
 	@echo "__________________________________________"
 
-help:
-	@echo "Run tests :"
-	@echo "\t make IMAGE=.. RUNS=.. run_test"
 
-
-run_test:
+run: mtest
 	./mtest $(IMAGE) $(RUNS)
 # Test file
 mtest : main.cpp
 	rm -f ./mtest
+	ln -f -s libs/harris_$(T).so bench_source/libharris.so
 	$(CXX) $(_CXX_FLAGS) $(RUNPATH) $(OPCV_FLAGS) $(LDFLAGS) $< -o $@
 
-$(APP)_libs : $(APP)$(DYN) $(APP)$(NO_OVERLAP) $(APP)$(OPT)
+libs : $(HARRIS_IMPLEMS)
+	@echo $(W_mesg)
 
-$(APP)$(NO_OVERLAP): $(LIB_PREFIX)$(APP)$(NO_OVERLAP).so
-$(APP)$(ALIGNED): $(LIB_PREFIX)$(APP)$(ALIGNED).so
-
-$(APP)$(DYN): $(LIB_PREFIX)$(APP)$(DYN).so
-
-$(APP)$(NAIVE): $(LIB_PREFIX)$(APP)$(NAIVE).so
-$(APP)$(SEQ): $(LIB_PREFIX)$(APP)$(SEQ).so
-
-$(APP)$(OPT): $(LIB_PREFIX)$(APP)$(OPT).so
-$(APP)$(OPT_R): $(LIB_PREFIX)$(APP)$(OPT_R).so
-
-$(LIB_PREFIX)$(APP)$(NO_OVERLAP).so: bench_source/$(APP)_larger_noverlap.cpp
-	$(CXX) $(CXX_FLAGS) $< -o bench_source/$@
-$(LIB_PREFIX)$(APP)$(ALIGNED).so: bench_source/$(APP)_n_overlap_aligned.cpp
-		$(CXX) $(CXX_FLAGS) $< -o bench_source/$@
-
-$(LIB_PREFIX)$(APP)$(DYN).so: bench_source/$(APP)_dyntile.cpp
-	$(CXX) $(CXX_FLAGS) $< -o bench_source/$@
-
-$(LIB_PREFIX)$(APP)$(NAIVE).so: bench_source/$(APP)_polymage_naive.cpp
-	$(CXX) $(CXX_FLAGS) $< -o bench_source/$@
-$(LIB_PREFIX)$(APP)$(SEQ).so: bench_source/$(APP)_sequential.cpp
-	$(CXX) $(CXX_FLAGS) $< -o bench_source/$@
-
-$(LIB_PREFIX)$(APP)$(OPT).so: bench_source/$(APP)_polymage.cpp
-	$(CXX) $(CXX_FLAGS) $< -o bench_source/$@
-$(LIB_PREFIX)$(APP)$(OPT_R).so: bench_source/$(APP)_polymage_rewritten.cpp
-	$(CXX) $(CXX_FLAGS) $< -o bench_source/$@
+$(HARRIS_IMPLEMS): %.so : bench_source/%.cpp
+	$(CXX) $(CXX_FLAGS) $< -o bench_source/libs/$@ 
 
 clean:
-	rm -f ./mtest bench_source/*.pyc bench_source/*.so bench_source/graph.png
+	$(RM) ./mtest bench_source/*.pyc bench_source/*.so bench_source/graph.png
+
+tar:
+	tar -cf harris-corner-implementations.tar bench_source/ images/ backups/ \
+		Makefile main.cpp

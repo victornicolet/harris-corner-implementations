@@ -7,11 +7,9 @@
 #include "bench_source/harris.h"
 
 // CHECK_FINAL_RESULT toggles the display of the input and output images
-#define CHECK_FINAL_RESULT
+//#define CHECK_FINAL_RESULT
 // Experiment : try to run multiples pipelines in parallel
 //#define RUN_PARALLEL = true
-// Exp. : align lines of matrixes in memory ( assuming tile size &- cache line size)
-#define VERSION_ALIGNED
 // Check if image to matrix translation produces the correst output
 //#define CHECK_LOADING_DATA
 using namespace std;
@@ -111,7 +109,7 @@ int main(int argc, char ** argv)
   {
     begin = omp_get_wtime();
     #ifdef VERSION_ALIGNED
-      pipeline_harris_aligned(C, R, data, res);
+      pipeline_harris(C, R, data, res);
     #else
       pipeline_harris(C, R, data, res);
     #endif

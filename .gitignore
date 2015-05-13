@@ -5,3 +5,5 @@
 images/*
 bench_source/launchpythonbench.sh
 mtest
+record.log
+harris-corner-implementations.tar

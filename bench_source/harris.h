@@ -116,8 +116,11 @@ inline int freematrix(float ** Mat, int rows){
   return 0;
 }
 
-extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * harris_void_arg);
-extern "C" void  pipeline_harris_aligned(int  C, int  R, float ** img_void_arg, float ** harris_void_arg);
+#ifndef VERSION_ALIGNED
+  extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * harris_void_arg);
+#else
+  extern "C" void  pipeline_harris(int  C, int  R, float ** img_void_arg, float ** harris_void_arg);
+#endif
 
 // Macros
 
