@@ -7,19 +7,15 @@ else
 endif
 
 RM=rm -f
-
-SRCS=bench_source/$(wildcard *.cpp)
-
-NO_OVERLAP=_no_overlap
-DYN=_dyn
-OPT=_opt
-NAIVE=_naive
-SEQ = _seq
-OPT_R=_opt_r
-ALIGNED=_aligned
-LIB_PREFIX=lib
-
-
+#Default test & profiling values
+IMAGE=images/grand_canyon2.jpg
+RUNS=10
+APP=harris
+#Profiling
+BENCH_RESULT_DIR=bench_default/
+VTUNE=amplxe-cl
+VTFLAGS=-collect general-exploration -analyze-system
+VT_R_DIR=--result-dir $(BENCH_RESULT_DIR)
 # Main test file compilation flags
 _CXX_FLAGS =-O3 -Lbench_source/ -fPIC -Wall -g -openmp
 
@@ -41,10 +37,6 @@ RUNPATH = -Wl,-rpath=bench_source/
 OPCV_FLAGS =`pkg-config --cflags opencv`
 LDFLAGS = `pkg-config --libs opencv` -lharris
 
-#Default test values
-IMAGE=images/grand_canyon2.jpg
-RUNS=10
-APP=harris
 
 #Listing all valid implementations
 #HARRIS_IMPLEMS = harris_dyntile.so
@@ -96,3 +88,7 @@ clean:
 tar:
 	tar -cf harris-corner-implementations.tar bench_source/ images/ backups/ \
 		Makefile main.cpp
+
+vtune: mtest
+	$(VTUNE) $(VTFLAGS) $(VT_R_DIR) -- ./mtest $(IMAGE) $(NRUNS)
+	tar -cf $(BENCH_RESULT_DIR).tar $(BENCH_RESULT_DIR)

@@ -37,3 +37,7 @@ versions of the algorithm).
   --> makes mtest, and teh runs a test with a default image and 10 runs.
 
 ==> Run a test : ./mtest (IMAGE) (NRUNS)
+
+  #Profiling
+  - profiling with vtune
+    make [BENCH_RESULT=result_directory] vtune
