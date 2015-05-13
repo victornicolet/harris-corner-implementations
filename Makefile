@@ -80,6 +80,9 @@ libs : $(HARRIS_IMPLEMS)
 	@echo $(W_mesg)
 
 $(HARRIS_IMPLEMS): %.so : bench_source/%.cpp
+	ifeq ($(wildcard bench_source/libs/.*),)
+        mkdir bench_source/libs
+	endif
 	$(CXX) $(CXX_FLAGS) $< -o bench_source/libs/$@ 
 
 clean:
