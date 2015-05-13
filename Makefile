@@ -91,5 +91,6 @@ tar:
 		Makefile main.cpp
 
 vtune: mtest
+	rm -rf $(BENCH_RESULT_DIR)
 	$(VTUNE) $(VTFLAGS) $(VT_R_DIR) -- ./mtest $(IMAGE) $(RUNS)
 	tar -cf $(BENCH_RESULT_DIR).tar $(BENCH_RESULT_DIR)
