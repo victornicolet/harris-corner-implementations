@@ -23,8 +23,9 @@ versions of the algorithm).
   Default compiler is gcc, you can use icpc by specifying CXX=icpc
 
   #Libs
-  make T=$libname libs -> compile the library corresponding to the 
+  make [T=libname] libs -> compile the library corresponding to the 
   harris_libname.cpp source file
+  By default, all libraries are compiled except aligned version.
 
   To use the implementations with aligned memory and no overlap, use T=aligned
   both when compiling the library and the test file.
@@ -32,5 +33,7 @@ versions of the algorithm).
   #Test file
   make [T=library] [CXX=compiler] mtest
   --> Use T=aligned if you have compiled the library using memory alignment
+  make [T=library] [CXX=compiler] run
+  --> makes mtest, and teh runs a test with a default image and 10 runs.
 
 ==> Run a test : ./mtest (IMAGE) (NRUNS)

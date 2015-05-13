@@ -108,11 +108,7 @@ int main(int argc, char ** argv)
   for(int run = 0; run <= nruns; run++)
   {
     begin = omp_get_wtime();
-    #ifdef VERSION_ALIGNED
-      pipeline_harris(C, R, data, res);
-    #else
-      pipeline_harris(C, R, data, res);
-    #endif
+    pipeline_harris(C, R, data, res);
     end = omp_get_wtime();
     stime = end - begin;
     if(run !=0){
