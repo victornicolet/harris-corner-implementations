@@ -42,5 +42,5 @@ rows = 8926 , cols = 13092
 ________________________________________________________________________________
 polymage / 30 runs                       99.881363 ms
 naïve / 11 runs                          510.475899465 ms
-no parallelism                           796.324211 ms
-no_overlap                               316.361260 ms
+no parallelism                           771.655107 ms
+no_overlap                               265.418386 ms
