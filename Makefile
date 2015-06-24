@@ -1,10 +1,12 @@
 #Set CXX = icpc or CXX=gcc/g++
 
 ifeq ($(CXX),icpc)
-	CXX_FLAGS=-openmp -ipo -g -O3 -xhost -fPIC -shared -debug parallel
+	CXX_FLAGS=-openmp
 else
-	CXX_FLAGS=-fopenmp -g -O3 -fPIC -shared
+	CXX_FLAGS=-fopenmp
 endif
+
+CXX_FLAGS+= -g -O3 -fPIC -shared
 
 RM=rm -f
 #Default test & profiling values
