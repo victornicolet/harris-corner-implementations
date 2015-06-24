@@ -43,7 +43,7 @@
                        (tab_cell(A, i+1, j-1) * -0.0833333333333f) +\
                        (tab_cell(A, i+1, j+1) * 0.0833333333333f))
 
-#define _mm_sobelX(A,i,j) 
+#define _mm_sobelX(A,i,j)
 tab_cell(A, i-1, j-1) *( -0.0833333333333f) +\
                          (tab_cell(A, i+1, j-1) * 0.0833333333333f) + \
                       (tab_cell(A, i+1, j) * 0.166666666667f) + \
@@ -52,8 +52,10 @@ tab_cell(A, i-1, j-1) *( -0.0833333333333f) +\
                        (tab_cell(A, i+1, j+1) * 0.0833333333333f))
 
 
+/* WIP Harris corner implementation using AVX/AVX2 vectorization */
 
-extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * harris_void_arg)
+extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg,
+    void * harris_void_arg)
 {
     float * img;
     img = (float *) (img_void_arg);
