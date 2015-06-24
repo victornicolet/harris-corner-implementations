@@ -196,6 +196,16 @@ static inline int freematrix(float ** Mat, int rows){
                         mat_cell(A, i+1, j) * mat_cell(B, i+1, j) +\
                         mat_cell(A, i+1, j+1) * mat_cell(B, i+1, j+1)
 
+#define filter2sq_t(A,B,i,j) tile_cell(A, i-1, j-1) * tile_cell(B, i-1, j-1) +\
+                        tile_cell(A, i-1, j) * tile_cell(B, i-1, j) +\
+                        tile_cell(A, i-1, j+1) * tile_cell(B, i-1, j+1) + \
+                        tile_cell(A, i, j-1) * tile_cell(B, i, j-1) + \
+                        tile_cell(A, i, j) * tile_cell(B, i, j)  + \
+                        tile_cell(A, i, j+1) * tile_cell(B, i, j+1)  + \
+                        tile_cell(A, i+1, j-1) * tile_cell(B, i+1, j-1) + \
+                        tile_cell(A, i+1, j) * tile_cell(B, i+1, j) +\
+                        tile_cell(A, i+1, j+1) * tile_cell(B, i+1, j+1)
+
 #define det(i,j)        mat_cell(Sxx, i, j) * mat_cell(Syy, i, j) - \
                         mat_cell(Sxy, i, j) * mat_cell(Sxy, i, j)
 

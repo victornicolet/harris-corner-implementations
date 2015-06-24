@@ -38,6 +38,7 @@ extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * har
         float Ix[TSIZEX+2*ft_size][TSIZEY+2*ft_size];
         float Iy[TSIZEX+2*ft_size][TSIZEY+2*ft_size];
 
+        #pragma omp private(Ix[TSIZEX+2*ft_size], Iy[TSIZEX+2*ft_size]))
         for (int  Tj = 0; (Tj <= (C / TSIZEY)); Tj ++)
         {
             int bot0, top0, right0, left0;
@@ -73,10 +74,10 @@ extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * har
                 for (j = left0 ; j < right0 ; j ++)
                 {
                     tab_cell(harris,i,j) =
-                    (filter2sq(Ix,Ix,i,j)*filter2sq(Iy,Iy,i,j) -
-                        filter2sq(Ix,Iy,i,j)*filter2sq(Ix,Iy,i,j))-
-                    (0.04f * ( filter2sq(Ix,Ix,i,j) + filter2sq(Iy,Iy,i,j)) *
-                        ( filter2sq(Ix,Ix,i,j) + filter2sq(Iy,Iy,i,j)));
+                    (filter2sq_t(Ix,Ix,i,j)*filter2sq_t(Iy,Iy,i,j) -
+                        filter2sq_t(Ix,Iy,i,j)*filter2sq_t(Ix,Iy,i,j))-
+                    (0.04f * ( filter2sq_t(Ix,Ix,i,j) + filter2sq_t(Iy,Iy,i,j)) *
+                        ( filter2sq_t(Ix,Ix,i,j) + filter2sq_t(Iy,Iy,i,j)));
                 }
 
             }
