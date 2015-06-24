@@ -8,7 +8,13 @@
 #include <omp.h>
 #include "harris.h"
 
-extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * harris_void_arg)
+/* Harris Corner Detection implementation without overlapping, with OpenMP tasks
+* and only shared global memory.
+* Task dependency definition in the pragmas rely directly on the data arrays
+*/
+
+extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg,
+  void * harris_void_arg)
 {
   float * img;
   img = (float *) (img_void_arg);
@@ -62,7 +68,7 @@ extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * har
           height = top - bot;
 
           // Loading task + sobel filter
-          #pragma omp task depend(out : Iy[bot0:height][ left0:width],\
+          #pragma omp task depend(out : Iy[bot0:height][ left0:width],        \
             Ix[bot0:height][left0:width])
           {
             for (int  i = bot0; i < top0 ; i++)
@@ -79,8 +85,9 @@ extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * har
 
           // Computational tasks : Ixx & Sxx fused
 
-          #pragma omp task depend(out : Syy[bot:height][left:width]) \
-              depend(in : Iy[bot-ft_size:height+ft_size][left-ft_size:width+ft_size])
+          #pragma omp task depend(out : Syy[bot:height][left:width])          \
+            depend(in :                                                       \
+              Iy[bot-ft_size:height+ft_size][left-ft_size:width+ft_size])
           {
             for (int  i = bot; i < top ; i++)
             {
@@ -92,9 +99,11 @@ extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * har
             }
           }
 
-          #pragma omp task depend(in : Ix[bot-ft_size:height+ft_size][left-ft_size:width+ft_size],\
-               Iy[bot-ft_size:height+ft_size][left-ft_size:width+ft_size]) \
-            depend(out : Sxy[bot:height][left:width])
+          #pragma omp task \
+            depend(out : Sxy[bot:height][left:width])                         \
+            depend(in :                                                       \
+                Ix[bot-ft_size:height+ft_size][left-ft_size:width+ft_size],   \
+                Iy[bot-ft_size:height+ft_size][left-ft_size:width+ft_size])
           {
             for (int  i = bot; i < top ; i++)
             {
@@ -106,8 +115,10 @@ extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * har
             }
           }
 
-          #pragma omp task depend(in : Ix[bot-ft_size:height+ft_size][left-ft_size:width+ft_size]) \
-            depend( out : Sxx[bot:height][left:width])
+          #pragma omp task \
+            depend( out : Sxx[bot:height][left:width])                        \
+            depend(in :                                                       \
+              Ix[bot-ft_size:height+ft_size][left-ft_size:width+ft_size])
           {
             for (int  i = bot; i < top ; i++)
             {
@@ -121,15 +132,18 @@ extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * har
           }
 
           // det + trace
-          #pragma omp task depend( in : Sxx[bot:height][left:width], \
-             Sxy[bot:height][left:width], \
+          #pragma omp task depend( in : Sxx[bot:height][left:width],          \
+             Sxy[bot:height][left:width],                                     \
              Syy[bot:height][left:width])
+
           for (int  i = bot; i < top ; i++)
           {
             #pragma ivdep
             for (int  j = left ; j < right ; j ++)
             {
-              tab_cell(harris,i,j) =  det(i, j) - (0.04f * ((mat_cell(Sxx, i, j) + mat_cell(Syy, i, j)) * (mat_cell(Sxx, i, j) + mat_cell(Syy, i, j))));
+              tab_cell(harris,i,j) =  det(i, j) -
+              (0.04f * ((mat_cell(Sxx, i, j) + mat_cell(Syy, i, j)) *
+                (mat_cell(Sxx, i, j) + mat_cell(Syy, i, j))));
             }
           }
 

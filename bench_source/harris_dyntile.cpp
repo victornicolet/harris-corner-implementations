@@ -5,7 +5,16 @@
 #include <string.h>
 #include "harris.h"
 
-extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * harris_void_arg)
+/* Harris Corner Detection Implementation with openmp tasks. Spatial tiles are
+* statically defined (TSIZEX,TSIZEY) but we rely on OpenMp schedulers for the
+* time-tiling.
+* Here we use local memory in the tile, but we need overlapping tiles. There is
+* synchronization between the task of different tiles, we only try to benefit
+* from parallelism in each independent tile.
+*/
+
+extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg,
+    void * harris_void_arg)
 {
     float * img;
     img = (float *) (img_void_arg);

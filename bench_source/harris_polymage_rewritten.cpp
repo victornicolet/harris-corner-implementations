@@ -5,6 +5,15 @@
 #include <string.h>
 #include "harris.h"
 
+/* This is only the polymage output alogirthm rewritten in a more
+* human-readable fashion. It also seems there was segmentation faults in
+* the output.
+* Here we have only one omp parallel for construct on the outermost loop
+* enclosing the tiles. The different steps of the pipeline are strongly grouped
+* and executed sequentially in each tile. This version also benefits from
+* compiler optimizations since it relies on few but costly calculatory steps.
+*/
+
 extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * harris_void_arg)
 {
     float * img;
@@ -20,7 +29,10 @@ extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * har
     // Filter size
     static int ft_size = 1;
 
-    #pragma omp parallel for schedule(static)
+    int i, j;
+
+    #pragma omp parallel for schedule(static) private(i, j) \
+        shared(img, harris)
     for (int  Ti = 0; (Ti <= (R / TSIZEX)); Ti ++)
     {
         float Ix[TSIZEX+2*ft_size][TSIZEY+2*ft_size];
@@ -28,8 +40,6 @@ extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * har
 
         for (int  Tj = 0; (Tj <= (C / TSIZEY)); Tj ++)
         {
-
-            int bot, top, right, left;
             int bot0, top0, right0, left0;
             int height,width;
             // Tile bounds
@@ -41,7 +51,7 @@ extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * har
             width = right0 - left0;
             height = top0 - bot0;
 
-            for (int  i = bot0; i <= top0 ; i++)
+            for (i = bot0; i <= top0 ; i++)
             {
                 #pragma ivdep
                 for (int  j = left0 ; j <= right0 ; j ++)
@@ -49,7 +59,7 @@ extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * har
                     tile_cell(Iy,i,j) = sobelY(img,i,j);
                 }
             }
-            for (int  i = bot0; i <= top0 ; i++)
+            for (i = bot0; i <= top0 ; i++)
             {
                 #pragma ivdep
                 for (int  j = left0 ; j <= right0 ; j ++)
@@ -57,13 +67,16 @@ extern "C" void  pipeline_harris(int  C, int  R, void * img_void_arg, void * har
                   tile_cell(Ix,i,j) = sobelX(img, i, j);
                 }
             }
-
-            for (int  i = bot0; i < top0 ; i++)
+            for (i = bot0; i < top0 ; i++)
             {
                 #pragma ivdep
-                for (int  j = left0 ; j < right0 ; j ++)
+                for (j = left0 ; j < right0 ; j ++)
                 {
-                    tab_cell(harris,i,j) = (filter2sq(Ix,Ix,i,j)*filter2sq(Iy,Iy,i,j) - filter2sq(Ix,Iy,i,j)*filter2sq(Ix,Iy,i,j))- (0.04f * ( filter2sq(Ix,Ix,i,j) + filter2sq(Iy,Iy,i,j)) * ( filter2sq(Ix,Ix,i,j) + filter2sq(Iy,Iy,i,j)));
+                    tab_cell(harris,i,j) =
+                    (filter2sq(Ix,Ix,i,j)*filter2sq(Iy,Iy,i,j) -
+                        filter2sq(Ix,Iy,i,j)*filter2sq(Ix,Iy,i,j))-
+                    (0.04f * ( filter2sq(Ix,Ix,i,j) + filter2sq(Iy,Iy,i,j)) *
+                        ( filter2sq(Ix,Ix,i,j) + filter2sq(Iy,Iy,i,j)));
                 }
 
             }

@@ -61,7 +61,7 @@ endif
 
 .PHONY : all
 
-all : mesg mtest harris_libs
+all : mesg libs mtest
 
 mesg :
 	@echo "Parameters : "
@@ -80,8 +80,8 @@ libs : $(HARRIS_IMPLEMS)
 	@echo $(W_mesg)
 
 $(HARRIS_IMPLEMS): %.so : bench_source/%.cpp
-	@mkdir -p bench_source/libs 
-	$(CXX) $(CXX_FLAGS) $< -o bench_source/libs/$@ 
+	@mkdir -p bench_source/libs
+	$(CXX) $(CXX_FLAGS) $< -o bench_source/libs/$@
 
 clean:
 	$(RM) ./mtest bench_source/*.pyc bench_source/*.so bench_source/graph.png \

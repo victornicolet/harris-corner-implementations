@@ -1,8 +1,8 @@
-#include <unistd.h>
-#include <errno.h>
+#ifndef HARRIS_H
+#define HARRIS_H
 
-#ifndef HARRIS
-#define HARRIS
+#include <errno.h>
+#include <unistd.h>
 
 #define isl_min(x,y) ((x) < (y) ? (x) : (y))
 #define isl_max(x,y) ((x) > (y) ? (x) : (y))
@@ -12,7 +12,7 @@
 #define tab_cell(A,i,j) A[((i)*C + (j))]
 #define tile_cell(A,i,j) mat_cell(A,i-bot0,j-left0)
 
-inline int get_cache_line_size(){
+static inline int get_cache_line_size(){
   int cache_line_size;
   #if defined(linux)
     cache_line_size = sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
@@ -23,7 +23,7 @@ inline int get_cache_line_size(){
   return cache_line_size;
 }
 
-inline float ** allocmatrix(int rows, int cols){
+static inline float ** allocmatrix(int rows, int cols){
   float ** Res = (float **) malloc(sizeof(float *) * rows);
   for(int i = 0; i < rows ; i++){
     Res[i] = (float *) malloc(sizeof(float) * cols);
@@ -41,20 +41,22 @@ inline float ** allocmatrix(int rows, int cols){
 }
 
 // Allocate an array where each line is aligned in memory.
-inline float ** alloc_array_lines(int R, int C, int cache_line_size){
+static inline float ** alloc_array_lines(int R, int C, int cache_line_size){
   int memalign;
   float ** mat;
   mat = (float **) malloc(R * sizeof(float *));
 
   for(int i = 0; i < R; i++){
 
-      memalign = posix_memalign((void **)&mat[i], cache_line_size, sizeof(float) * C);
+      memalign = posix_memalign((void **)&mat[i], cache_line_size,
+        sizeof(float) * C);
 
       if(memalign != 0){
         printf("Error while allocating tile at %i\n" , i);
         return NULL;
       } else if (memalign == EINVAL) {
-        printf("alloc_array_lines error : alignment parameter is not a power of two \n");
+        printf("alloc_array_lines error : alignment parameter is not a power"
+          " of two \n");
         return NULL;
       } else if (memalign == ENOMEM) {
         printf("alloc_array_lines error : insufficient memory\n");
@@ -70,7 +72,7 @@ inline float ** alloc_array_lines(int R, int C, int cache_line_size){
 }
 
 // Array [i][j] is j'th element of i'th tile, each tile is aligned in memory
-inline float ** alloc_array_tiles(int R, int C, int TSIZEX, int TSIZEY){
+static inline float ** alloc_array_tiles(int R, int C, int TSIZEX, int TSIZEY){
   int cache_line_size;
   int memalign;
   int x,y;
@@ -91,7 +93,8 @@ inline float ** alloc_array_tiles(int R, int C, int TSIZEX, int TSIZEY){
     for(int j = 0; i < n_tiles_y; j++){
       x = isl_min( (i + 1) * TSIZEX , R) - isl_max(i * TSIZEX, 1);
       y = isl_min( (j + 1) * TSIZEY, C-1) - isl_max(j * TSIZEY, 1);
-      memalign = posix_memalign((void **)&mat[i], cache_line_size, sizeof(float) * x * y);
+      memalign = posix_memalign((void **)&mat[i], cache_line_size,
+        sizeof(float) * x * y);
 
       if(memalign != 0){
         printf("Error while allocating tile at %i : %i\n" , i, j);
@@ -108,7 +111,7 @@ inline float ** alloc_array_tiles(int R, int C, int TSIZEX, int TSIZEY){
   return mat;
 }
 
-inline int freematrix(float ** Mat, int rows){
+static inline int freematrix(float ** Mat, int rows){
   for(int i = 0; i < rows; i++){
     free(Mat[i]);
   }
@@ -196,4 +199,4 @@ inline int freematrix(float ** Mat, int rows){
 #define det(i,j)        mat_cell(Sxx, i, j) * mat_cell(Syy, i, j) - \
                         mat_cell(Sxy, i, j) * mat_cell(Sxy, i, j)
 
-#endif /*HARRIS*/
+#endif /*HARRIS_H*/
